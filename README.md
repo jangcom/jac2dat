@@ -1,2 +1,2 @@
 # jac2dat
-Convert .jac to various data formats
+Convert .jac files to various data formats
