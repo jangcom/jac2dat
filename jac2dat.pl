@@ -4,7 +4,7 @@ use warnings;
 use autodie;
 use utf8;
 use File::Basename qw(basename);
-use feature qw(say);
+use feature qw(say state);
 use Carp qw(croak);
 use Cwd qw(getcwd);
 use Data::Dump qw(dump);
@@ -15,8 +15,8 @@ use constant ARRAY  => ref [];
 use constant HASH   => ref {};
 
 
-our $VERSION = '1.01';
-our $LAST    = '2019-04-07';
+our $VERSION = '1.02';
+our $LAST    = '2019-04-08';
 our $FIRST   = '2019-02-04';
 
 
@@ -1248,7 +1248,19 @@ sub read_in_det {
         
         my($k, $v) = (split /\s*$det_sep\s*/)[0, 1];
         $v =~ s/\s*#.*//; # Suppress an inline comment.
-        $det_href->{$k} = $v;
+        
+        # Nonfitted efficiency
+        if ($k =~ /eff\([0-9.]+\)/i) {
+            (my $manual_nrg = $k) =~ s/
+                eff\(
+                (?<manual_nrg>[0-9.]+)
+                \)
+            /$+{manual_nrg}/ix;
+            $det_href->{nonfitted_effs}{$manual_nrg} = $v;
+        }
+        
+        # All else
+        else { $det_href->{$k} = $v }
     }
     close $det_fh;
     print "[$det] has been read in.\n\n";
@@ -1257,17 +1269,40 @@ sub read_in_det {
 }
 
 
-sub nrg_fwhm_eff_from {
-    # """Calculate energies, FWHMs, peak efficiencies from channels."""
+sub calc_nrg_fwhm_eff_using {
+    # """Calculate the energy, FWHM, and peak efficiency using channels."""
     
     my($ch, $det_href) = @_;
     
-    # Calculate the energy, FWHM, and peak efficiency.
-    my $nrg  = eval($det_href->{nrg});    # f($ch)
-    my $fwhm = eval($det_href->{fwhm});   # f($nrg)
-    my $eff  = $nrg < $det_href->{knee} ? # f($nrg)
-        eval($det_href->{eff_bef_knee}) :
-        eval($det_href->{eff_from_knee});
+    # (1) Energy: f($ch)
+    my $nrg = eval($det_href->{nrg});
+    
+    # (2) FWHM: f($nrg)
+    my $fwhm = eval($det_href->{fwhm});
+    
+    # (3) Peak efficiency: f($nrg)
+    my $eff;
+    
+    # (3-1) Nonfitted
+    state $seen_href = {};
+    my $close_nrg = 0;
+    if ($det_href->{eff_expr} =~ /nonfit(?:ted)?/i) {
+        foreach my $manual_nrg (keys %{$det_href->{nonfitted_effs}}) {
+            $close_nrg = $manual_nrg if abs($nrg - $manual_nrg) < 0.3;
+        }
+        if ($close_nrg and not $seen_href->{$close_nrg}) {
+            $eff = eval($det_href->{nonfitted_effs}{$close_nrg});
+            $seen_href->{$close_nrg}++;
+        }
+        else { $eff = 'NaN' }
+    }
+    
+    # (3-2) Fitted
+    elsif ($det_href->{eff_expr} =~ /\bfit(?:ted)?/i) {
+        $eff = $nrg < $det_href->{knee} ?
+            eval($det_href->{eff_bef_knee}) :
+            eval($det_href->{eff_from_knee});
+    }
     
     return {
         nrg_formula           => $det_href->{nrg},
@@ -1292,25 +1327,27 @@ sub conv_jac_to_dat {
     #---------------------------------------------------------------------------
     # Detector data
     # > Channel must be expressed as $ch in a string, which will be 'eval'ed
-    #   in nrg_fwhm_eff_from() ($ch is declared in that routine).
+    #   in calc_nrg_fwhm_eff_using() ($ch is declared in that routine).
     # > Likewise, express energy as $nrg.
     #---------------------------------------------------------------------------
     my %det = (
         id    => 'det01',
         model => 'GEM (manufacturer: ORTEC, distributor: Seiko EG&G)',
-        knee  => 180,
         # ene_u8.pdf
-        nrg_calib_date => '2018-04-19 14:19:21',
-        nrg            => '6.942824E-001 + 4.994878E-001*$ch'.
-                          ' + 6.919887E-008*$ch**2',
-        fwhm           => '2.076851E+000 + 8.814739E-003*sqrt($nrg)'.
-                          ' + 1.204853E-003*$nrg',
+        nrg_calib_date  => '2018-04-19 14:19:21',
+        nrg             => '6.942824E-001 + 4.994878E-001*$ch'.
+                           ' + 6.919887E-008*$ch**2',
+        fwhm            => '2.076851E+000 + 8.814739E-003*sqrt($nrg)'.
+                           ' + 1.204853E-003*$nrg',
         # eff_u8.pdf
-        eff_calib_date => '2018-04-19 14:22:21',
-        eff_bef_knee   => 'exp(-3.824022E+001 + 1.427534E+001*log($nrg)'.
-                          ' - 1.452642E+000*log($nrg)**2)',
-        eff_from_knee  => 'exp(1.470955E+000 - 1.018902E+000*log($nrg)'.
-                          ' + 1.995309E-002*log($nrg)**2)',
+        eff_calib_date  => '2018-04-19 14:22:21',
+        eff_expr        => 'fitted', # fitted, nonfitted
+        nonfitted_effs  => {},
+        knee            => 180, # keV
+        eff_bef_knee    => 'exp(-3.824022E+001 + 1.427534E+001*log($nrg)'.
+                           ' - 1.452642E+000*log($nrg)**2)',
+        eff_from_knee   => 'exp(1.470955E+000 - 1.018902E+000*log($nrg)'.
+                           ' + 1.995309E-002*log($nrg)**2)',
     );
     read_in_det($run_opts_href, \%det) if -e $run_opts_href->{det};
     
@@ -1332,8 +1369,10 @@ sub conv_jac_to_dat {
         return;
     }
     printf(
-        "The following JAC file%s will be converted:\n",
-        $run_opts_href->{jac_files}[1] ? 's' : ''
+        "The following JAC file%s will be converted to [%s%s]:\n",
+        $run_opts_href->{jac_files}[1] ? 's' : '',
+        $run_opts_href->{dat_path},
+        $run_opts_href->{dat_path} =~ /\/$/ ? '' : '/',
     );
     say "-" x 70;
     say "[$_]" for @{$run_opts_href->{jac_files}};
@@ -1372,7 +1411,7 @@ sub conv_jac_to_dat {
             #
             # The first three non-count records contain time information.
             # Extract the time information to be used as comments and
-            # assign zeros to prevent errors in nrg_fwhm_eff_from().
+            # assign zeros to prevent errors in calc_nrg_fwhm_eff_using().
             # e.g.
             # [0] 1200
             # [1] 1206
@@ -1383,7 +1422,7 @@ sub conv_jac_to_dat {
                 $times{real_time} = $counts[$ch_idx] if $ch_idx == 1;
                 $times{acqu_time} = $counts[$ch_idx] if $ch_idx == 2;
                 $counts[$ch_idx] = 0;
-#                say "\$counts[$ch_idx]: $counts[$ch_idx]";
+#                say "\$counts[$ch_idx]: $counts[$ch_idx]"; # For debugging
             }
             
             #
@@ -1398,7 +1437,7 @@ sub conv_jac_to_dat {
                 $ret{eff_bef_knee_formula},
                 $ret{eff_from_knee_formula},
                 $ret{eff},
-            ) = @{nrg_fwhm_eff_from($ch, \%det)}{
+            ) = @{calc_nrg_fwhm_eff_using($ch, \%det)}{
                 qw/
                     nrg_formula
                     nrg
@@ -1409,8 +1448,10 @@ sub conv_jac_to_dat {
                     eff
                 /
             };
+            
             # gamma = cnt / (cnt gamma^{-1})
-            $gammas[$ch_idx] = $counts[$ch_idx] / $ret{eff} ;
+            $gammas[$ch_idx] = eval { $counts[$ch_idx] / $ret{eff} } // 'NaN';
+            print "\$counts[\$ch_idx] indivisible by \$ret{eff}: $@" if $@;
             
             # The base of the Perl log command is the number e.
             # To avoid confusion, substitute log for ln used as comments,
@@ -1446,9 +1487,38 @@ sub conv_jac_to_dat {
         my %convs = (
             cmt1  => '%-15s',
             cmt2a => '%-14s',
-            cmt2b => '%-27s',
+            cmt2b => '%-6s',
+            cmt2c => '%-27s',
             cmt3  => '%-21s',
         );
+        my @eff_comment;
+        if ($det{eff_expr} =~ /nonfit(?:ted)?/i) {
+            my @ascending = sort { $a <=> $b } keys %{$det{nonfitted_effs}};
+            foreach my $manual_nrg (@ascending) {
+                push @eff_comment, sprintf(
+                    " $convs{cmt2b} = %s",
+                    $manual_nrg,
+                    $det{nonfitted_effs}{$manual_nrg},
+                );
+            }
+        }
+        elsif ($det{eff_expr} =~ /\bfit(?:ted)?/i) {
+            push @eff_comment,
+                sprintf(
+                    " det_eff_knee: %s keV",
+                    $det{knee},
+                ),
+                sprintf(
+                    " $convs{cmt2c} = %s",
+                    'det_eff_bef_knee (cnt/gam)',
+                    $ret{eff_bef_knee_formula},
+                ),
+                sprintf(
+                    " $convs{cmt2c} = %s",
+                    'det_eff_from_knee (cnt/gam)',
+                    $ret{eff_from_knee_formula},
+                );
+        }
         reduce_data(
             { # Settings
                 rpt_formats => $run_opts_href->{dat_fmts},
@@ -1500,19 +1570,10 @@ sub conv_jac_to_dat {
                         $det{eff_calib_date},
                     ),
                     sprintf(
-                        " det_eff_knee: %s keV",
-                        $det{knee},
+                        " Efficiency expression: %s",
+                        $det{eff_expr},
                     ),
-                    sprintf(
-                        " $convs{cmt2b} = %s",
-                        'det_eff_bef_knee (cnt/gam)',
-                        $ret{eff_bef_knee_formula},
-                    ),
-                    sprintf(
-                        " $convs{cmt2b} = %s",
-                        'det_eff_from_knee (cnt/gam)',
-                        $ret{eff_from_knee_formula},
-                    ),
+                    @eff_comment,
                     "-" x 69,
                     #
                     # Comment 3: Time information
@@ -1710,7 +1771,7 @@ jac2dat - Convert .jac files to various data formats
 =head1 EXAMPLES
 
     perl jac2dat.pl 190117_181213-1_1200s.jac -fmts=dat,xlsx -nopause
-    perl jac2dat.pl -all -fmts=all -det=detector.j2d
+    perl jac2dat.pl -all -fmts=all -det=det_fitted.j2d
 
 =head1 REQUIREMENTS
 

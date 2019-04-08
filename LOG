@@ -1,3 +1,6 @@
+v1.02 (2019-04-08)
+> Detection efficiencies can now be input manually.
+
 v1.01 (2019-04-07)
 > Source code reorganized.
 > Conversion formulas can now be specified via an input file.
