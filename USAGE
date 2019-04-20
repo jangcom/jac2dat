@@ -23,7 +23,7 @@ DESCRIPTION
                     channels, gamma energies, peak FWHMs, peak efficiencies,
                     counts, count per second (cps), gammas, and
                     gamma per second (gps) are stored.
-        - Other data formats include tex, csv, xlsx, json, and yaml.
+        - Other supported data formats include tex, csv, xlsx, json, and yaml.
 
 OPTIONS
         jac_files ...
@@ -66,8 +66,9 @@ OPTIONS
             Do not pause the shell at the end of the program.
 
 EXAMPLES
-        perl jac2dat.pl 190117_181213-1_1200s.jac -fmts=dat,xlsx -nopause
+        perl jac2dat.pl 1200s.jac -fmts=dat,xlsx -nopause
         perl jac2dat.pl -all -fmts=all -det=det_fitted.j2d
+        perl jac2dat.pl sample_rand.jac -nopause
 
 REQUIREMENTS
         Perl 5

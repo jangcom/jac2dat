@@ -15,17 +15,17 @@ use constant ARRAY  => ref [];
 use constant HASH   => ref {};
 
 
-our $VERSION = '1.02';
-our $LAST    = '2019-04-08';
+our $VERSION = '1.03';
+our $LAST    = '2019-04-20';
 our $FIRST   = '2019-02-04';
 
 
 #----------------------------------My::Toolset----------------------------------
 sub show_front_matter {
     # """Display the front matter."""
-    my $sub_name = join('::', (caller(0))[0, 3]);
     
     my $prog_info_href = shift;
+    my $sub_name = join('::', (caller(0))[0, 3]);
     croak "The 1st arg of [$sub_name] must be a hash ref!"
         unless ref $prog_info_href eq HASH;
     
@@ -39,7 +39,7 @@ sub show_front_matter {
         $is_no_newline,
         $is_copy,
     );
-    my $lead_symb    = '';
+    my $lead_symb = '';
     foreach (@_) {
         $is_prog                = 1  if /prog/i;
         $is_auth                = 1  if /auth/i;
@@ -140,11 +140,10 @@ sub show_front_matter {
 
 sub validate_argv {
     # """Validate @ARGV against %cmd_opts."""
-    my $sub_name = join('::', (caller(0))[0, 3]);
     
     my $argv_aref     = shift;
     my $cmd_opts_href = shift;
-    
+    my $sub_name = join('::', (caller(0))[0, 3]);
     croak "The 1st arg of [$sub_name] must be an array ref!"
         unless ref $argv_aref eq ARRAY;
     croak "The 2nd arg of [$sub_name] must be a hash ref!"
@@ -215,10 +214,10 @@ sub validate_argv {
 
 sub reduce_data {
     # """Reduce data and generate reporting files."""
-    my $sub_name = join('::', (caller(0))[0, 3]);
     
     my $sets_href = shift;
     my $cols_href = shift;
+    my $sub_name = join('::', (caller(0))[0, 3]);
     croak "The 1st arg of [$sub_name] must be a hash ref!"
         unless ref $sets_href eq HASH;
     croak "The 2nd arg of [$sub_name] must be a hash ref!"
@@ -1152,10 +1151,9 @@ sub construct_timestamps {
 
 sub rm_duplicates {
     # """Remove duplicate items from an array."""
-    my $sub_name = join('::', (caller(0))[0, 3]);
     
     my $aref = shift;
-    
+    my $sub_name = join('::', (caller(0))[0, 3]);
     croak "The 1st arg of [$sub_name] must be an array ref!"
         unless ref $aref eq ARRAY;
     
@@ -1655,7 +1653,7 @@ sub jac2dat {
         );
         my %cmd_opts = ( # Command-line opts
             jac_all  => qr/-?-a(?:ll)?/i,
-            dat_fmts => qr/-?-(?:dat_)?fmts\s*=\s*/i,
+            dat_fmts => qr/-?-(?:dat_)?fmts?\s*=\s*/i,
             dat_path => qr/-?-(?:dat_)?path\s*=\s*/i,
             det      => qr/-?-det(?:ector)?\s*=\s*/i,
             nofm     => qr/-?-nofm/,
@@ -1725,7 +1723,7 @@ jac2dat - Convert .jac files to various data formats
                 channels, gamma energies, peak FWHMs, peak efficiencies,
                 counts, count per second (cps), gammas, and
                 gamma per second (gps) are stored.
-    - Other data formats include tex, csv, xlsx, json, and yaml.
+    - Other supported data formats include tex, csv, xlsx, json, and yaml.
 
 =head1 OPTIONS
 
@@ -1770,8 +1768,9 @@ jac2dat - Convert .jac files to various data formats
 
 =head1 EXAMPLES
 
-    perl jac2dat.pl 190117_181213-1_1200s.jac -fmts=dat,xlsx -nopause
+    perl jac2dat.pl 1200s.jac -fmts=dat,xlsx -nopause
     perl jac2dat.pl -all -fmts=all -det=det_fitted.j2d
+    perl jac2dat.pl sample_rand.jac -nopause
 
 =head1 REQUIREMENTS
 
