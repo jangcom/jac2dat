@@ -1707,8 +1707,8 @@ jac2dat - Convert .jac files to various data formats
 =head1 DESCRIPTION
 
     jac2dat converts .jac files to various data formats.
-    - JAC file: The gamma spectra format of the Science and Technology Agency,
-                (now the MEXT) Japan. For details, refer to the catalogue of
+    - JAC file: The gamma spectra format of the Science and Technology Agency
+                (now the MEXT), Japan. For details, refer to the catalogue of
                 DS-P1001 Gamma Station, SII.
                 A .jac file consists of only one column, in which
                 gamma counts are stored in ascending order of channels.
