@@ -10,9 +10,8 @@ use Cwd qw(getcwd);
 use Data::Dump qw(dump);
 use List::Util qw(first maxstr);
 use DateTime;
-use constant SCALAR => ref \$0;
-use constant ARRAY  => ref [];
-use constant HASH   => ref {};
+use constant ARRAY => ref [];
+use constant HASH  => ref {};
 
 
 our $VERSION = '1.03';
