@@ -74,8 +74,11 @@ REQUIREMENTS
         Perl 5
             Text::CSV, Excel::Writer::XLSX, JSON, YAML
 
+SEE ALSO
+    jac2dat on GitHub <https://github.com/jangcom/jac2dat>
+
 AUTHOR
-    Jaewoong Jang <jan9@korea.ac.kr>
+    Jaewoong Jang <jangj@korea.ac.kr>
 
 COPYRIGHT
     Copyright (c) 2019 Jaewoong Jang
