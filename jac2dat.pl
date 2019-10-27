@@ -14,20 +14,20 @@ use constant ARRAY => ref [];
 use constant HASH  => ref {};
 
 
-our $VERSION = '1.03';
-our $LAST    = '2019-04-20';
+our $VERSION = '1.04';
+our $LAST    = '2019-10-27';
 our $FIRST   = '2019-02-04';
 
 
 #----------------------------------My::Toolset----------------------------------
 sub show_front_matter {
     # """Display the front matter."""
-    
+
     my $prog_info_href = shift;
     my $sub_name = join('::', (caller(0))[0, 3]);
     croak "The 1st arg of [$sub_name] must be a hash ref!"
         unless ref $prog_info_href eq HASH;
-    
+
     # Subroutine optional arguments
     my(
         $is_prog,
@@ -51,7 +51,7 @@ sub show_front_matter {
         $lead_symb              = $_ if /^[^a-zA-Z0-9]$/;
     }
     my $newline = $is_no_newline ? "" : "\n";
-    
+
     #
     # Fill in the front matter array.
     #
@@ -62,12 +62,12 @@ sub show_front_matter {
         '+' => $lead_symb.('+' x $border_len).$newline,
         '*' => $lead_symb.('*' x $border_len).$newline,
     );
-    
+
     # Top rule
     if ($is_prog or $is_auth) {
         $fm[$k++] = $borders{'+'};
     }
-    
+
     # Program info, except the usage
     if ($is_prog) {
         $fm[$k++] = sprintf(
@@ -78,14 +78,21 @@ sub show_front_matter {
             $newline,
         );
         $fm[$k++] = sprintf(
-            "%sVersion %s (%s)%s",
+            "%s%s v%s (%s)%s",
             ($lead_symb ? $lead_symb.' ' : $lead_symb),
+            $prog_info_href->{titl},
             $prog_info_href->{vers},
             $prog_info_href->{date_last},
             $newline,
         );
+        $fm[$k++] = sprintf(
+            "%sPerl %s%s",
+            ($lead_symb ? $lead_symb.' ' : $lead_symb),
+            $^V,
+            $newline,
+        );
     }
-    
+
     # Timestamp
     if ($is_timestamp) {
         my %datetimes = construct_timestamps('-');
@@ -96,7 +103,7 @@ sub show_front_matter {
             $newline,
         );
     }
-    
+
     # Author info
     if ($is_auth) {
         $fm[$k++] = $lead_symb.$newline if $is_prog;
@@ -105,25 +112,30 @@ sub show_front_matter {
             ($lead_symb ? $lead_symb.' ' : $lead_symb),
             $prog_info_href->{auth}{$_},
             $newline,
-        ) for qw(name posi affi mail);
+        ) for (
+            'name',
+#            'posi',
+#            'affi',
+            'mail',
+        );
     }
-    
+
     # Bottom rule
     if ($is_prog or $is_auth) {
         $fm[$k++] = $borders{'+'};
     }
-    
+
     # Program usage: Leading symbols are not used.
     if ($is_usage) {
         $fm[$k++] = $newline if $is_prog or $is_auth;
         $fm[$k++] = $prog_info_href->{usage};
     }
-    
+
     # Feed a blank line at the end of the front matter.
     if (not $is_no_trailing_blkline) {
         $fm[$k++] = $newline;
     }
-    
+
     #
     # Print the front matter.
     #
@@ -139,7 +151,7 @@ sub show_front_matter {
 
 sub validate_argv {
     # """Validate @ARGV against %cmd_opts."""
-    
+
     my $argv_aref     = shift;
     my $cmd_opts_href = shift;
     my $sub_name = join('::', (caller(0))[0, 3]);
@@ -147,12 +159,12 @@ sub validate_argv {
         unless ref $argv_aref eq ARRAY;
     croak "The 2nd arg of [$sub_name] must be a hash ref!"
         unless ref $cmd_opts_href eq HASH;
-    
+
     # For yn prompts
     my $the_prog = (caller(0))[1];
     my $yn;
     my $yn_msg = "    | Want to see the usage of $the_prog? [y/n]> ";
-    
+
     #
     # Terminate the program if the number of required arguments passed
     # is not sufficient.
@@ -175,11 +187,11 @@ sub validate_argv {
             }
         }
     }
-    
+
     #
     # Count the number of correctly passed command-line options.
     #
-    
+
     # Non-fnames
     my $num_corr_cmd_opts = 0;
     foreach my $arg (@$argv_aref) {
@@ -190,12 +202,12 @@ sub validate_argv {
             }
         }
     }
-    
+
     # Fname-likes
     my $num_corr_fnames = 0;
     $num_corr_fnames = grep $_ !~ /^-/, @$argv_aref;
     $num_corr_cmd_opts += $num_corr_fnames;
-    
+
     # Warn if "no" correct command-line options have been passed.
     if (not $num_corr_cmd_opts) {
         print "\n    | None of the command-line options was correct.\n";
@@ -206,14 +218,14 @@ sub validate_argv {
             print $yn_msg;
         }
     }
-    
+
     return;
 }
 
 
 sub reduce_data {
     # """Reduce data and generate reporting files."""
-    
+
     my $sets_href = shift;
     my $cols_href = shift;
     my $sub_name = join('::', (caller(0))[0, 3]);
@@ -221,7 +233,7 @@ sub reduce_data {
         unless ref $sets_href eq HASH;
     croak "The 2nd arg of [$sub_name] must be a hash ref!"
         unless ref $cols_href eq HASH;
-    
+
     #
     # Available formats
     # [1] dat
@@ -248,7 +260,7 @@ sub reduce_data {
     # > [3] and [4] are essentially their modules' interfaces.
     # > [5] and [6] are a simple chunk of their modules' data dumping commands.
     #
-    
+
     #
     # Default attributes
     #
@@ -310,7 +322,7 @@ sub reduce_data {
     # (CAUTION: Not the whole hashes!)
     $sets{$_} = $sets_href->{$_} for keys %$sets_href;
     $cols{$_} = $cols_href->{$_} for keys %$cols_href;
-    
+
     #
     # Data format validation
     #
@@ -323,7 +335,7 @@ sub reduce_data {
               "Available formats are: ".
               join(", ", sort keys %flags)."\n";
     }
-    
+
     #
     # Column size validation
     #
@@ -339,7 +351,7 @@ sub reduce_data {
                 "It must be [$cols{size}] or its integer multiple!";
         }
     }
-    
+
     #
     # Create some default key-val pairs.
     #
@@ -369,7 +381,7 @@ sub reduce_data {
     #   but are not surrounded by any space characters.
     # > XLSX, as written in binaries, has nothing to do here.
     #
-    
+
     # dat
     $cols{space_bef}{dat} = " " unless exists $cols{space_bef}{dat};
     $cols{heads_sep}{dat} = "|" unless exists $cols{heads_sep}{dat};
@@ -393,7 +405,7 @@ sub reduce_data {
 #    dump(\%cols);
 #    pause_shell();
     #+++++++++++++++++++#
-    
+
     #
     # Convert the data array into a "rowwise" columnar structure.
     #
@@ -406,15 +418,15 @@ sub reduce_data {
         #+++++++++++++++++++#
         $i++ if ($j + 1) % $cols{size} == 0;
     }
-    
+
     #
     # Define row and column indices to be used for iteration controls.
     #
     $rows{idx_last}     = $#{$cols{data_rowwise}};
     $cols{idx_multiple} = $cols{size} - 1;
-    
+
     # Obtain columnar data sums.
-    if (defined $cols{sum_idx_multiples}) {
+    if ($cols{sum_idx_multiples} and @{$cols{sum_idx_multiples}}) {
         for (my $i=0; $i<=$rows{idx_last}; $i++) {
             for (my $j=0; $j<=$cols{idx_multiple}; $j++) {
                     if (first { $j == $_ } @{$cols{sum_idx_multiples}}) {
@@ -428,19 +440,19 @@ sub reduce_data {
 #    dump(\%cols);
 #    pause_shell();
     #+++++++++++++++++++#
-    
+
     #
     # Notify the beginning of the routine.
     #
     say "\n#".('=' x 69);
     say "#"." [$sub_name] $sets{begin_msg}";
     say "#".('=' x 69);
-    
+
     #
     # Multiplex outputting
     # IO::Tee intentionally not used for avoiding its additional installation
     #
-    
+
     # Define filehandle refs and corresponding filenames.
     my($dat_fh, $tex_fh, $csv_fh, $xlsx_fh);
     my %rpt_formats = (
@@ -451,7 +463,7 @@ sub reduce_data {
         json => {fh => $xlsx_fh, fname => $sets{rpt_bname}.".json"},
         yaml => {fh => $xlsx_fh, fname => $sets{rpt_bname}.".yaml"},
     );
-    
+
     # Multiple invocations of the writing routine
     my $cwd = getcwd();
     mkdir $sets{rpt_path} if not -e $sets{rpt_path};
@@ -475,7 +487,7 @@ sub reduce_data {
         );
     }
     chdir $cwd;
-    
+
     #
     # The writing routine (nested)
     #
@@ -487,21 +499,21 @@ sub reduce_data {
         my %_strs  = %{$_[4]};
         my %_cols  = %{$_[5]};
         my %_rows  = %{$_[6]};
-        
+
         #
         # [CSV][XLSX] Load modules and instantiate classes.
         #
-        
+
         # [CSV]
         my $csv;
         if ($_flag =~ $_flags{csv}) {
             require Text::CSV; # vendor lib || cpanm
             $csv = Text::CSV->new( { binary => 1 } )
                 or die "Cannot instantiate Text::CSV! ".Text::CSV->error_diag();
-            
+
             $csv->eol($_strs{newlines}{$_flag});
         }
-        
+
         # [XLSX]
         my($workbook, $worksheet, %xlsx_formats);
         my($xlsx_row, $xlsx_col, $xlsx_col_init, $xlsx_col_scale_factor);
@@ -512,7 +524,7 @@ sub reduce_data {
             require Excel::Writer::XLSX; # vendor lib || cpanm
             binmode($_fh); # fh can now be R/W in binary as well as in text
             $workbook = Excel::Writer::XLSX->new($_fh);
-            
+
             # Define the worksheet name using the bare filename of the report.
             # If the bare filename contains a character that is invalid
             # as an Excel worksheet name or lengthier than 32 characters,
@@ -523,7 +535,7 @@ sub reduce_data {
                 )
             };
             $worksheet = $workbook->add_worksheet() if $@;
-            
+
             # As of Excel::Writer::XLSX v0.98, a format property
             # can be added in the middle, but cannot be overridden.
             # The author of this routine therefore uses cellwise formats
@@ -543,7 +555,7 @@ sub reduce_data {
 #            dump(\%xlsx_formats);
 #            pause_shell();
             #+++++++++++++++++++#
-            
+
             # Panes freezing
             # Added on 2018-11-23
             if ($_cols{freeze_panes}) {
@@ -554,11 +566,11 @@ sub reduce_data {
                 );
             }
         }
-        
+
         #
         # Data construction
         #
-        
+
         # [DAT] Prepend comment symbols to the first headings.
         if ($_flag =~ $_flags{dat}) {
             $_cols{heads}[0]    = $_strs{symbs}{$_flag}." ".$_cols{heads}[0];
@@ -568,14 +580,14 @@ sub reduce_data {
             $_cols{heads}[0]    =~ s/^[^\w] //;
             $_cols{subheads}[0] =~ s/^[^\w] //;
         }
-        
+
         #
         # Define widths for columnar alignment.
         # (1) Take the lengthier one between headings and subheadings.
         # (2) Take the lengthier one between (1) and the data.
         # (3) Take the lengthier one between (2) and the data sum.
         #
-        
+
         # (1)
         for (my $j=0; $j<=$#{$_cols{heads}}; $j++) {
             $_cols{widths}[$j] =
@@ -593,14 +605,14 @@ sub reduce_data {
             }
         }
         # (3)
-        if (defined $_cols{sum_idx_multiples}) {
+        if ($_cols{sum_idx_multiples} and @{$_cols{sum_idx_multiples}}) {
             foreach my $j (@{$_cols{sum_idx_multiples}}) {
                 $_cols{widths}[$j] =
                     length($_cols{data_sums}[$j]) > $_cols{widths}[$j] ?
                     length($_cols{data_sums}[$j]) : $_cols{widths}[$j];
             }
         }
-        
+
         #
         # [DAT] Border construction
         #
@@ -613,7 +625,10 @@ sub reduce_data {
                     $_cols{widths}[$j] + length($_cols{heads_sep}{$_flag})
                 );
                 # Border width 2: Data sums label
-                if (defined $_cols{sum_idx_multiples}) {
+                if (
+                    $_cols{sum_idx_multiples}
+                    and @{$_cols{sum_idx_multiples}}
+                ) {
                     if ($j < $_cols{sum_idx_multiples}[0]) {
                         $_cols{border_widths}[1] += (
                                      $_cols{widths}[$j]
@@ -637,33 +652,33 @@ sub reduce_data {
             $_strs{rules}{$_flag}{bot} =
                 $_strs{symbs}{$_flag}.('-' x $_cols{border_widths}[0]);
         }
-        
+
         #
         # Begin writing.
         # [JSON][YAML]: Via their dumping commands.
         # [DAT][TeX]:   Via the output filehandle.
         # [CSV][XLSX]:  Via their output methods.
         #
-        
+
         # [JSON][YAML][DAT][TeX] Change the output filehandle from STDOUT.
         select($_fh);
-        
+
         #
         # [JSON][YAML] Load modules and dump the data.
         #
-        
+
         # [JSON]
         if ($_flag =~ $_flags{json}) {
             use JSON; # vendor lib || cpanm
             print to_json(\%_cols, { pretty => 1 });
         }
-        
+
         # [YAML]
         if ($_flag =~ $_flags{yaml}) {
             use YAML; # vendor lib || cpanm
             print Dump(\%_cols);
         }
-        
+
         # [DAT][TeX] OPTIONAL blocks
         if ($_flag =~ /$_flags{dat}|$_flags{tex}/) {
             # Prepend the program information, if given.
@@ -676,7 +691,7 @@ sub reduce_data {
                     ($_strs{symbs}{$_flag} // $_strs{symbs}{dat}),
                 );
             }
-            
+
             # Prepend comments, if given.
             if ($_sets{cmt_arr}) {
                 if (@{$_sets{cmt_arr}}) {
@@ -685,12 +700,12 @@ sub reduce_data {
                 }
             }
         }
-        
+
         # [TeX] Wrapping up - begin
         if ($_flag =~ $_flags{tex}) {
             # Document class
             say "\\documentclass{article}";
-            
+
             # Package loading with kind notice
             say "%";
             say "% (1) The \...rule commands are defined by".
@@ -699,12 +714,12 @@ sub reduce_data {
             say "%     you may want to use the underscore package.";
             say "%";
             say "\\usepackage{booktabs,underscore}";
-            
+
             # document env - begin
             print "\n";
             say "\\begin{document}";
             print "\n";
-            
+
             # tabular env - begin
             print "\\begin{tabular}{";
             for (my $j=0; $j<=$#{$_cols{heads}}; $j++) {
@@ -715,15 +730,15 @@ sub reduce_data {
             }
             print "}\n";
         }
-        
+
         # [DAT][TeX] Top rule
         print $_strs{indents}{$_flag}, $_strs{rules}{$_flag}{top}, "\n"
             if $_flag =~ /$_flags{dat}|$_flags{tex}/;
-        
+
         #
         # Headings and subheadings
         #
-        
+
         # [DAT][TeX]
         for (my $j=0; $j<=$#{$_cols{heads}}; $j++) {
             if ($_flag =~ /$_flags{dat}|$_flags{tex}/) {
@@ -769,7 +784,7 @@ sub reduce_data {
                 print $_strs{newlines}{$_flag} if $j == $#{$_cols{subheads}};
             }
         }
-        
+
         # [CSV][XLSX]
         if ($_flag =~ $_flags{csv}) {
             $csv->sep_char($_cols{heads_sep}{$_flag});
@@ -790,11 +805,11 @@ sub reduce_data {
                 $xlsx_formats{none}{none}
             );
         }
-        
+
         # [DAT][TeX] Middle rule
         print $_strs{indents}{$_flag}, $_strs{rules}{$_flag}{mid}, "\n"
             if $_flag =~ /$_flags{dat}|$_flags{tex}/;
-        
+
         #
         # Data
         #
@@ -848,11 +863,11 @@ sub reduce_data {
                     $_cols{conv} =
                         '%-'.
                         (
-                                     $_cols{widths}[$j] 
+                                     $_cols{widths}[$j]
                             + length($_cols{space_bef}{$_flag})
                         ).
                         's';
-                    
+
                     # Conversion (ii): "Ragged left"
                     # > length($_cols{space_bef}{$_flag})
                     #   is "appended" to the conversion.
@@ -867,7 +882,7 @@ sub reduce_data {
                                     '' : ' ' x length($_cols{space_bef}{$_flag})
                             );
                     }
-                    
+
                     # Columns
                     print $_strs{indents}{$_flag} if $j == 0;
                     if ($_cols{data_sep}{$_flag} !~ /\t/) {
@@ -902,7 +917,7 @@ sub reduce_data {
                         $xlsx_col,
                         $_cols{widths}[$j] * $xlsx_col_scale_factor
                     );
-                    
+
                     my $_align = (
                         first { $j == $_ } @{$_cols{ragged_left_idx_multiples}}
                     ) ? 'right' : 'left';
@@ -923,15 +938,15 @@ sub reduce_data {
                 }
             }
         }
-        
+
         # [DAT][TeX] Bottom rule
         print $_strs{indents}{$_flag}, $_strs{rules}{$_flag}{bot}, "\n"
             if $_flag =~ /$_flags{dat}|$_flags{tex}/;
-        
+
         #
         # Append the data sums.
         #
-        if (defined $_cols{sum_idx_multiples}) {
+        if ($_cols{sum_idx_multiples} and @{$_cols{sum_idx_multiples}}) {
             #
             # [DAT] Columns "up to" the beginning of the data sums
             #
@@ -946,11 +961,11 @@ sub reduce_data {
                 );
                 print $sum_lab_aligned;
             }
-            
+
             #
             # Columns "for" the data sums
             #
-            
+
             # [DAT][TeX][XLSX]
             my $the_beginning = $_flag !~ $_flags{dat} ?
                 0 : $_cols{sum_idx_multiples}[0];
@@ -966,11 +981,11 @@ sub reduce_data {
                     $_cols{conv} =
                         '%-'.
                         (
-                                     $_cols{widths}[$j] 
+                                     $_cols{widths}[$j]
                             + length($_cols{space_bef}{$_flag})
                         ).
                         's';
-                    
+
                     # Conversion (ii): "Ragged left"
                     # > length($_cols{space_bef}{$_flag})
                     #   is "appended" to the conversion.
@@ -985,7 +1000,7 @@ sub reduce_data {
                                     '' : ' ' x length($_cols{space_bef}{$_flag})
                             );
                     }
-                    
+
                     # Columns
                     print $_strs{indents}{$_flag} if $j == 0;
                     if ($_cols{data_sep}{$_flag} !~ /\t/) {
@@ -1017,19 +1032,19 @@ sub reduce_data {
                     my $_align = (
                         first { $j == $_ } @{$_cols{ragged_left_idx_multiples}}
                     ) ? 'right' : 'left';
-                    
+
                     $worksheet->write(
                         $xlsx_row,
                         $xlsx_col,
                         $_cols{data_sums}[$j] // $_strs{nan}{$_flag},
                         $xlsx_formats{none}{$_align}
                     );
-                    
+
                     $xlsx_col++;
                     $xlsx_row++ if $j == $_cols{sum_idx_multiples}[-1];
                 }
             }
-            
+
             # [CSV]
             if ($_flag =~ $_flags{csv}) {
                 $csv->print(
@@ -1038,38 +1053,38 @@ sub reduce_data {
                 );
             }
         }
-        
+
         # [TeX] Wrapping up - end
         if ($_flag =~ $_flags{tex}) {
             # tabular env - end
             say '\\end{tabular}';
-            
+
             # document env - end
             print "\n";
             say "\\end{document}";
         }
-        
+
         # [DAT][TeX] EOF
         print $_strs{eofs}{$_flag} if $_flag =~ /$_flags{dat}|$_flags{tex}/;
-        
+
         # [JSON][YAML][DAT][TeX] Restore the output filehandle to STDOUT.
         select(STDOUT);
-        
+
         # Close the filehandle.
         # the XLSX filehandle must be closed via its close method!
         close $_fh         if $_flag !~ $_flags{xlsx};
         $workbook->close() if $_flag =~ $_flags{xlsx};
     }
-    
+
     return;
 }
 
 
 sub show_elapsed_real_time {
     # """Show the elapsed real time."""
-    
+
     my @opts = @_ if @_;
-    
+
     # Parse optional arguments.
     my $is_return_copy = 0;
     my @del; # Garbage can
@@ -1083,13 +1098,13 @@ sub show_elapsed_real_time {
     }
     my %dels = map { $_ => 1 } @del;
     @opts = grep !$dels{$_}, @opts;
-    
+
     # Optional strings printing
     print for @opts;
-    
+
     # Elapsed real time printing
     my $elapsed_real_time = sprintf("Elapsed real time: [%s s]", time - $^T);
-    
+
     # Return values
     if ($is_return_copy) {
         return $elapsed_real_time;
@@ -1103,22 +1118,22 @@ sub show_elapsed_real_time {
 
 sub pause_shell {
     # """Pause the shell."""
-    
+
     my $notif = $_[0] ? $_[0] : "Press enter to exit...";
-    
+
     print $notif;
     while (<STDIN>) { last; }
-    
+
     return;
 }
 
 
 sub construct_timestamps {
     # """Construct timestamps."""
-    
+
     # Optional setting for the date component separator
     my $date_sep  = '';
-    
+
     # Terminate the program if the argument passed
     # is not allowed to be a delimiter.
     my @delims = ('-', '_');
@@ -1128,13 +1143,13 @@ sub construct_timestamps {
         croak "The date delimiter must be one of: [".join(', ', @delims)."]"
             unless $is_correct_delim;
     }
-    
+
     # Construct and return a datetime hash.
     my $dt  = DateTime->now(time_zone => 'local');
     my $ymd = $dt->ymd($date_sep);
     my $hms = $dt->hms($date_sep ? ':' : '');
     (my $hm = $hms) =~ s/[0-9]{2}$//;
-    
+
     my %datetimes = (
         none   => '', # Used for timestamp suppressing
         ymd    => $ymd,
@@ -1143,23 +1158,23 @@ sub construct_timestamps {
         ymdhms => sprintf("%s%s%s", $ymd, ($date_sep ? ' ' : '_'), $hms),
         ymdhm  => sprintf("%s%s%s", $ymd, ($date_sep ? ' ' : '_'), $hm),
     );
-    
+
     return %datetimes;
 }
 
 
 sub rm_duplicates {
     # """Remove duplicate items from an array."""
-    
+
     my $aref = shift;
     my $sub_name = join('::', (caller(0))[0, 3]);
     croak "The 1st arg of [$sub_name] must be an array ref!"
         unless ref $aref eq ARRAY;
-    
+
     my(%seen, @uniqued);
     @uniqued = grep !$seen{$_}++, @$aref;
     @$aref = @uniqued;
-    
+
     return;
 }
 #-------------------------------------------------------------------------------
@@ -1167,14 +1182,14 @@ sub rm_duplicates {
 
 sub parse_argv {
     # """@ARGV parser"""
-    
+
     my(
         $argv_aref,
         $cmd_opts_href,
         $run_opts_href,
     ) = @_;
     my %cmd_opts = %$cmd_opts_href; # For regexes
-    
+
     # Parser: Overwrite default run options if requested by the user.
     my $field_sep = ',';
     foreach (@$argv_aref) {
@@ -1182,12 +1197,12 @@ sub parse_argv {
         if (/[.]jac$/i and -e) {
             push @{$run_opts_href->{jac_files}}, $_;
         }
-        
+
         # All .jac files in the current working directory
         if (/$cmd_opts{jac_all}/) {
             push @{$run_opts_href->{jac_files}}, glob '*.jac';
         }
-        
+
         # A file containing conversion formulas of a detector
         if (/$cmd_opts{det}/i) {
             s/$cmd_opts{det}//i;
@@ -1197,55 +1212,55 @@ sub parse_argv {
                 print " Default conversion formulas will be used.\n\n";
             }
         }
-        
+
         # Data formats
         if (/$cmd_opts{dat_fmts}/i) {
             s/$cmd_opts{dat_fmts}//i;
             @{$run_opts_href->{dat_fmts}} = split /$field_sep/;
         }
-        
+
         # Data path
         if (/$cmd_opts{dat_path}/i) {
             s/$cmd_opts{dat_path}//i;
             $run_opts_href->{dat_path} = $_;
         }
-        
+
         # The front matter won't be displayed at the beginning of the program.
         if (/$cmd_opts{nofm}/) {
             $run_opts_href->{is_nofm} = 1;
         }
-        
+
         # The shell won't be paused at the end of the program.
         if (/$cmd_opts{nopause}/) {
             $run_opts_href->{is_nopause} = 1;
         }
     }
     rm_duplicates($run_opts_href->{jac_files});
-    
+
     return;
 }
 
 
 sub read_in_det {
     # """Read in the conversion formulas of a detector."""
-    
+
     my(
         $run_opts_href,
         $det_href,
     ) = @_;
     my $det     = $run_opts_href->{det};
     my $det_sep = $run_opts_href->{det_sep};
-    
+
     open my $det_fh, '<', $det;
     foreach (<$det_fh>) {
         chomp;
         next if /^\s*#/;
         next if /^$/;
         next if not /$det_sep/;
-        
+
         my($k, $v) = (split /\s*$det_sep\s*/)[0, 1];
         $v =~ s/\s*#.*//; # Suppress an inline comment.
-        
+
         # Nonfitted efficiency
         if ($k =~ /eff\([0-9.]+\)/i) {
             (my $manual_nrg = $k) =~ s/
@@ -1255,31 +1270,31 @@ sub read_in_det {
             /$+{manual_nrg}/ix;
             $det_href->{nonfitted_effs}{$manual_nrg} = $v;
         }
-        
+
         # All else
         else { $det_href->{$k} = $v }
     }
     close $det_fh;
     print "[$det] has been read in.\n\n";
-    
+
     return;
 }
 
 
 sub calc_nrg_fwhm_eff_using {
     # """Calculate the energy, FWHM, and peak efficiency using channels."""
-    
+
     my($ch, $det_href) = @_;
-    
+
     # (1) Energy: f($ch)
     my $nrg = eval($det_href->{nrg});
-    
+
     # (2) FWHM: f($nrg)
     my $fwhm = eval($det_href->{fwhm});
-    
+
     # (3) Peak efficiency: f($nrg)
     my $eff;
-    
+
     # (3-1) Nonfitted
     state $seen_href = {};
     my $close_nrg = 0;
@@ -1293,14 +1308,14 @@ sub calc_nrg_fwhm_eff_using {
         }
         else { $eff = 'NaN' }
     }
-    
+
     # (3-2) Fitted
     elsif ($det_href->{eff_expr} =~ /\bfit(?:ted)?/i) {
         $eff = $nrg < $det_href->{knee} ?
             eval($det_href->{eff_bef_knee}) :
             eval($det_href->{eff_from_knee});
     }
-    
+
     return {
         nrg_formula           => $det_href->{nrg},
         nrg                   => $nrg,
@@ -1315,12 +1330,12 @@ sub calc_nrg_fwhm_eff_using {
 
 sub conv_jac_to_dat {
     # """ Convert .jac files to various output formats. """
-    
+
     my(
         $prog_info_href,
         $run_opts_href,
     ) = @_;
-    
+
     #---------------------------------------------------------------------------
     # Detector data
     # > Channel must be expressed as $ch in a string, which will be 'eval'ed
@@ -1347,7 +1362,7 @@ sub conv_jac_to_dat {
                            ' + 1.995309E-002*log($nrg)**2)',
     );
     read_in_det($run_opts_href, \%det) if -e $run_opts_href->{det};
-    
+
     say "Calibration conditions:";
     say "-" x 70;
     foreach (sort keys %det) {
@@ -1359,7 +1374,7 @@ sub conv_jac_to_dat {
     }
     say "-" x 70;
     say "";
-    
+
     # Notification
     if (not $run_opts_href->{jac_files}[0]) {
         print "No .jac file found.\n\n";
@@ -1374,7 +1389,7 @@ sub conv_jac_to_dat {
     say "-" x 70;
     say "[$_]" for @{$run_opts_href->{jac_files}};
     say "-" x 70;
-    
+
     # yn prompt
     my $yn_msg = "Run? (y/n)> ";
     print $yn_msg;
@@ -1383,7 +1398,7 @@ sub conv_jac_to_dat {
         return if $yn =~ /\bn\b/i;
         print $yn_msg;
     }
-    
+
     # Work on the JAC files.
     my %fmt_specifiers = (
         nrg   => '%.7f', # Energy
@@ -1395,12 +1410,12 @@ sub conv_jac_to_dat {
     );
     foreach my $jac (@{$run_opts_href->{jac_files}}) {
         my(@counts, @gammas);
-        
+
         # Read in the content of a JAC file without the ending newline char.
         open my $jac_fh, '<', $jac;
         chomp(@counts = <$jac_fh>);
         close $jac_fh;
-        
+
         # Construct columnar data.
         my($ch, %ret, %times);
         my $arr_ref_to_data = [];
@@ -1421,7 +1436,7 @@ sub conv_jac_to_dat {
                 $counts[$ch_idx] = 0;
 #                say "\$counts[$ch_idx]: $counts[$ch_idx]"; # For debugging
             }
-            
+
             #
             # Data construction
             #
@@ -1445,16 +1460,16 @@ sub conv_jac_to_dat {
                     eff
                 /
             };
-            
+
             # gamma = cnt / (cnt gamma^{-1})
             $gammas[$ch_idx] = eval { $counts[$ch_idx] / $ret{eff} } // 'NaN';
             print "\$counts[\$ch_idx] indivisible by \$ret{eff}: $@" if $@;
-            
+
             # The base of the Perl log command is the number e.
             # To avoid confusion, substitute log for ln used as comments,
             # but not for calculation.
             $ret{$_} =~ s/log/ln/gi for keys %ret;
-            
+
             #
             # Data assignment
             #
@@ -1478,7 +1493,7 @@ sub conv_jac_to_dat {
                 ),
             );
         }
-        
+
         # Write to data files.
         (my $jac_bname = $jac) =~ s/[.][\w]+$//;
         my %convs = (
@@ -1628,14 +1643,14 @@ sub conv_jac_to_dat {
             }
         );
     }
-    
+
     return;
 }
 
 
 sub jac2dat {
     # """jac2dat main routine"""
-    
+
     if (@ARGV) {
         my %prog_info = (
             titl       => basename($0, '.pl'),
@@ -1645,9 +1660,9 @@ sub jac2dat {
             date_first => $FIRST,
             auth       => {
                 name => 'Jaewoong Jang',
-                posi => 'PhD student',
-                affi => 'University of Tokyo',
-                mail => 'jan9@korea.ac.kr',
+#                posi => '',
+#                affi => '',
+                mail => 'jangj@korea.ac.kr',
             },
         );
         my %cmd_opts = ( # Command-line opts
@@ -1667,26 +1682,26 @@ sub jac2dat {
             is_nofm    => 0,
             is_nopause => 0,
         );
-        
+
         # ARGV validation and parsing
         validate_argv(\@ARGV, \%cmd_opts);
         parse_argv(\@ARGV, \%cmd_opts, \%run_opts);
-        
+
         # Notification - beginning
         show_front_matter(\%prog_info, 'prog', 'auth')
             unless $run_opts{is_nofm};
-        
+
         # Main
         conv_jac_to_dat(\%prog_info, \%run_opts);
-        
+
         # Notification - end
         show_elapsed_real_time();
         pause_shell()
             unless $run_opts{is_nopause};
     }
-    
+
     system("perldoc \"$0\"") if not @ARGV;
-    
+
     return;
 }
 
@@ -1776,9 +1791,13 @@ jac2dat - Convert .jac files to various data formats
     Perl 5
         Text::CSV, Excel::Writer::XLSX, JSON, YAML
 
+=head1 SEE ALSO
+
+L<jac2dat on GitHub|https://github.com/jangcom/jac2dat>
+
 =head1 AUTHOR
 
-Jaewoong Jang <jan9@korea.ac.kr>
+Jaewoong Jang <jangj@korea.ac.kr>
 
 =head1 COPYRIGHT
 
