@@ -1,6 +1,3 @@
-# github archive
-github/
-
 # jac2dat records
 bak_jac2dat.pl/
 jac2dat_baker.bat
@@ -8,7 +5,9 @@ bak_det_fitted.j2d/
 bak_det_nonfitted.j2d/
 det_baker.bat
 refs/
-util/
+utils/
+
+# Updates
 updates.txt
 
 # jac2dat sample files
