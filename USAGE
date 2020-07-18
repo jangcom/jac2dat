@@ -1,24 +1,24 @@
 NAME
-    jac2dat - Convert .jac files to various data formats
+    jac2dat - Convert .jac/.jca files to various data formats
 
 SYNOPSIS
-        perl jac2dat.pl [jac_files ...] [-all] [-det=det_file]
-                        [-dat_fmts=ext ...] [-dat_path=path]
-                        [-nofm] [-nopause]
+        perl jac2dat.pl [jac_files ...] [--all] [--det=det_file]
+                        [--dat_fmts=ext ...] [--dat_path=path]
+                        [--nofm] [--nopause]
 
 DESCRIPTION
-        jac2dat converts .jac files to various data formats.
+        jac2dat converts .jac/.jca files to various data formats.
         - JAC file: The gamma spectra format of the Science and Technology Agency
                     (now the MEXT), Japan. For details, refer to the catalogue of
                     DS-P1001 Gamma Station, SII.
-                    A .jac file consists of only one column, in which
+                    A .jac/.jca file consists of only one column, in which
                     gamma counts are stored in ascending order of channels.
                     The first three records are "not" gamma counts, and
                     are used for special purposes:
                     - Record 1: Live time (duration)
                     - Record 2: Real time (duration)
                     - Record 3: Acquired time
-        - DAT file: A plottable text file converted from a .jac file.
+        - DAT file: A plottable text file converted from a .jac/.jca file.
                     A .dat file consists of multiple columns, in which
                     channels, gamma energies, peak FWHMs, peak efficiencies,
                     counts, count per second (cps), gammas, and
@@ -27,19 +27,19 @@ DESCRIPTION
 
 OPTIONS
         jac_files ...
-            .jac files to be converted.
+            .jac/.jca files to be converted.
 
-        -all (short form: -a)
-            All .jac files in the current working directory will be converted.
+        --all (short: -a)
+            All .jac/.jca files in the current working directory will be converted.
 
-        -detector=det_file (short form: -det)
+        --detector=det_file (short: --det)
             A file containing conversion formulas of a detector
             such as channel-to-energy and channel-to-FWHM formulas.
             Key-value pairs contained in this file take precedence
             over the predefined formulas.
             Refer to the sample file 'detector.j2d' for the syntax.
 
-        -dat_fmts=ext ... (short: -fmts, default: dat)
+        --dat_fmts=ext ... (short: --fmts, default: dat)
             Data formats. Multiple formats are separated by the comma (,).
             all
                 All of the following ext's.
@@ -56,19 +56,19 @@ OPTIONS
             yaml
                 YAML
 
-        -dat_path=path (short: -path, default: current working directory)
+        --dat_path=path (short: --path, default: current working directory)
             The path in which the converted data files will be stored.
 
-        -nofm
+        --nofm
             Do not show the front matter at the beginning of the program.
 
-        -nopause
+        --nopause
             Do not pause the shell at the end of the program.
 
 EXAMPLES
-        perl jac2dat.pl 1200s.jac -fmts=dat,xlsx -nopause
-        perl jac2dat.pl -all -fmts=all -det=det_fitted.j2d
-        perl jac2dat.pl sample_rand.jac -nopause
+        perl jac2dat.pl 1200s.jac --fmts=dat,xlsx --nopause
+        perl jac2dat.pl --all --fmts=all --det=det_fitted.j2d
+        perl jac2dat.pl sample_rand.jac --nopause
 
 REQUIREMENTS
         Perl 5
@@ -81,7 +81,7 @@ AUTHOR
     Jaewoong Jang <jangj@korea.ac.kr>
 
 COPYRIGHT
-    Copyright (c) 2019 Jaewoong Jang
+    Copyright (c) 2019-2020 Jaewoong Jang
 
 LICENSE
     This software is available under the MIT license; the license

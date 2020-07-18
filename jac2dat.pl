@@ -15,7 +15,7 @@ use constant HASH  => ref {};
 
 
 our $VERSION = '1.04';
-our $LAST    = '2019-10-27';
+our $LAST    = '2020-07-18';
 our $FIRST   = '2019-02-04';
 
 
@@ -1193,14 +1193,14 @@ sub parse_argv {
     # Parser: Overwrite default run options if requested by the user.
     my $field_sep = ',';
     foreach (@$argv_aref) {
-        # .jac files
-        if (/[.]jac$/i and -e) {
+        # .jac/.jca files
+        if (/[.]j[ac]$/i and -e) {
             push @{$run_opts_href->{jac_files}}, $_;
         }
 
-        # All .jac files in the current working directory
+        # All .jac/.jca files in the current working directory
         if (/$cmd_opts{jac_all}/) {
-            push @{$run_opts_href->{jac_files}}, glob '*.jac';
+            push @{$run_opts_href->{jac_files}}, glob '*.jac *.jca';
         }
 
         # A file containing conversion formulas of a detector
@@ -1329,7 +1329,7 @@ sub calc_nrg_fwhm_eff_using {
 
 
 sub conv_jac_to_dat {
-    # """ Convert .jac files to various output formats. """
+    # """ Convert .jac/.jca files to various output formats. """
 
     my(
         $prog_info_href,
@@ -1377,7 +1377,7 @@ sub conv_jac_to_dat {
 
     # Notification
     if (not $run_opts_href->{jac_files}[0]) {
-        print "No .jac file found.\n\n";
+        print "No .jac/.jca file found.\n\n";
         return;
     }
     printf(
@@ -1420,6 +1420,7 @@ sub conv_jac_to_dat {
         my($ch, %ret, %times);
         my $arr_ref_to_data = [];
         for (my $ch_idx=0; $ch_idx<=$#counts; $ch_idx++) {
+            next if $counts[$ch_idx] =~ /^$/;  # Skip blank lines.
             #
             # The first three non-count records contain time information.
             # Extract the time information to be used as comments and
@@ -1654,7 +1655,7 @@ sub jac2dat {
     if (@ARGV) {
         my %prog_info = (
             titl       => basename($0, '.pl'),
-            expl       => "Convert .jac files to various data formats",
+            expl       => "Convert .jac/.jca files to various data formats",
             vers       => $VERSION,
             date_last  => $LAST,
             date_first => $FIRST,
@@ -1711,28 +1712,28 @@ __END__
 
 =head1 NAME
 
-jac2dat - Convert .jac files to various data formats
+jac2dat - Convert .jac/.jca files to various data formats
 
 =head1 SYNOPSIS
 
-    perl jac2dat.pl [jac_files ...] [-all] [-det=det_file]
-                    [-dat_fmts=ext ...] [-dat_path=path]
-                    [-nofm] [-nopause]
+    perl jac2dat.pl [jac_files ...] [--all] [--det=det_file]
+                    [--dat_fmts=ext ...] [--dat_path=path]
+                    [--nofm] [--nopause]
 
 =head1 DESCRIPTION
 
-    jac2dat converts .jac files to various data formats.
+    jac2dat converts .jac/.jca files to various data formats.
     - JAC file: The gamma spectra format of the Science and Technology Agency
                 (now the MEXT), Japan. For details, refer to the catalogue of
                 DS-P1001 Gamma Station, SII.
-                A .jac file consists of only one column, in which
+                A .jac/.jca file consists of only one column, in which
                 gamma counts are stored in ascending order of channels.
                 The first three records are "not" gamma counts, and
                 are used for special purposes:
                 - Record 1: Live time (duration)
                 - Record 2: Real time (duration)
                 - Record 3: Acquired time
-    - DAT file: A plottable text file converted from a .jac file.
+    - DAT file: A plottable text file converted from a .jac/.jca file.
                 A .dat file consists of multiple columns, in which
                 channels, gamma energies, peak FWHMs, peak efficiencies,
                 counts, count per second (cps), gammas, and
@@ -1742,19 +1743,19 @@ jac2dat - Convert .jac files to various data formats
 =head1 OPTIONS
 
     jac_files ...
-        .jac files to be converted.
+        .jac/.jca files to be converted.
 
-    -all (short form: -a)
-        All .jac files in the current working directory will be converted.
+    --all (short: -a)
+        All .jac/.jca files in the current working directory will be converted.
 
-    -detector=det_file (short form: -det)
+    --detector=det_file (short: --det)
         A file containing conversion formulas of a detector
         such as channel-to-energy and channel-to-FWHM formulas.
         Key-value pairs contained in this file take precedence
         over the predefined formulas.
         Refer to the sample file 'detector.j2d' for the syntax.
 
-    -dat_fmts=ext ... (short: -fmts, default: dat)
+    --dat_fmts=ext ... (short: --fmts, default: dat)
         Data formats. Multiple formats are separated by the comma (,).
         all
             All of the following ext's.
@@ -1771,20 +1772,20 @@ jac2dat - Convert .jac files to various data formats
         yaml
             YAML
 
-    -dat_path=path (short: -path, default: current working directory)
+    --dat_path=path (short: --path, default: current working directory)
         The path in which the converted data files will be stored.
 
-    -nofm
+    --nofm
         Do not show the front matter at the beginning of the program.
 
-    -nopause
+    --nopause
         Do not pause the shell at the end of the program.
 
 =head1 EXAMPLES
 
-    perl jac2dat.pl 1200s.jac -fmts=dat,xlsx -nopause
-    perl jac2dat.pl -all -fmts=all -det=det_fitted.j2d
-    perl jac2dat.pl sample_rand.jac -nopause
+    perl jac2dat.pl 1200s.jac --fmts=dat,xlsx --nopause
+    perl jac2dat.pl --all --fmts=all --det=det_fitted.j2d
+    perl jac2dat.pl sample_rand.jac --nopause
 
 =head1 REQUIREMENTS
 
@@ -1801,7 +1802,7 @@ Jaewoong Jang <jangj@korea.ac.kr>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2019 Jaewoong Jang
+Copyright (c) 2019-2020 Jaewoong Jang
 
 =head1 LICENSE
 
