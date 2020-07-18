@@ -1,4 +1,6 @@
 2020-07-18 (v1.04)
+- The prepending and appending flags of output filenames can be designated
+  via the command-line options.
 - .jca files can now be processed in addition to .jac files.
 
 2019-04-20 (v1.03)

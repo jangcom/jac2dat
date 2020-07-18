@@ -33,6 +33,7 @@
 
 <pre><code>    perl jac2dat.pl [jac_files ...] [--all] [--det=det_file]
                     [--dat_fmts=ext ...] [--dat_path=path]
+                    [--dat_prepend=flag] [--dat_append=flag]
                     [--nofm] [--nopause]</code></pre>
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
@@ -89,6 +90,12 @@
 
     --dat_path=path (short: --path, default: current working directory)
         The path in which the converted data files will be stored.
+
+    --dat_prepend=flag (short: --prep, default: empty)
+        A flag to be prepended to the names of output files.
+
+    --dat_append=flag (short: --app, default: empty)
+        A flag to be appended to the names of output files.
 
     --nofm
         Do not show the front matter at the beginning of the program.
