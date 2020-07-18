@@ -1,14 +1,15 @@
-v1.04
+2020-07-18 (v1.04)
+- .jca files can now be processed in addition to .jac files.
 
-v1.03 (2019-04-20)
-> A randomized .jac sample file has been included in the program release.
+2019-04-20 (v1.03)
+- A randomized .jac sample file has been included in the program release.
 
-v1.02 (2019-04-08)
-> Detection efficiencies can now be input manually.
+2019-04-08 (v1.02)
+- Detection efficiencies can now be input manually.
 
-v1.01 (2019-04-07)
-> Source code reorganized.
-> Conversion formulas can now be specified via an input file.
+2019-04-07 (v1.01)
+- Source code reorganized
+- Conversion formulas can now be specified via an input file.
 
-v1.00 (2019-02-04)
-> jac2dat.pl first written.
+2019-02-04 (v1.00)
+- jac2dat.pl first written
