@@ -1423,16 +1423,19 @@ sub conv_jac_to_dat {
     foreach my $jac (@{$run_opts_href->{jac_files}}) {
         my(@counts, @gammas);
 
-        # Read in the content of a JAC file without the ending newline char.
+        # Read in the content of a JAC file.
         open my $jac_fh, '<', $jac;
-        chomp(@counts = <$jac_fh>);
+        foreach (<$jac_fh>) {
+            # Read in nonblank lines and remove the newline characters.
+            chomp($_);
+            push @counts, $_ if $_ !~ /^$/;
+        }
         close $jac_fh;
 
         # Construct columnar data.
         my($ch, %ret, %times);
         my $arr_ref_to_data = [];
         for (my $ch_idx=0; $ch_idx<=$#counts; $ch_idx++) {
-            next if $counts[$ch_idx] =~ /^$/;  # Skip blank lines.
             #
             # The first three non-count records contain time information.
             # Extract the time information to be used as comments and
