@@ -1,24 +1,14 @@
-# jac2dat records
-bak_jac2dat.pl/
+# Detector settings
+j2d/det_baker.bat
+j2d/bak_det_fitted.j2d/
+j2d/bak_det_nonfitted.j2d/
+j2d/kaken*.j2d
+j2d/kurns*.j2d
+
+# Misc.
 jac2dat_baker.bat
-bak_det_fitted.j2d/
-bak_det_nonfitted.j2d/
-det_baker.bat
+bak_jac2dat.pl/
+docs/updates.txt
 refs/
 utils/
-
-# Updates
-updates.txt
-
-# jac2dat sample files
-kaken*.j2d
-kurns*.j2d
-
-# MSWin link files
 *.lnk
-
-# POD-related
-jac2dat_usage.bat
-jac2dat.html
-pod2htmd.tmp
-jac2dat_pod2html.bat
