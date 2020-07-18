@@ -1225,6 +1225,18 @@ sub parse_argv {
             $run_opts_href->{dat_path} = $_;
         }
 
+        # Prepending data flag
+        if (/$cmd_opts{dat_prepend}/i) {
+            s/$cmd_opts{dat_prepend}//i;
+            $run_opts_href->{dat_prepend} = $_;
+        }
+
+        # Appending data flag
+        if (/$cmd_opts{dat_append}/i) {
+            s/$cmd_opts{dat_append}//i;
+            $run_opts_href->{dat_append} = $_;
+        }
+
         # The front matter won't be displayed at the beginning of the program.
         if (/$cmd_opts{nofm}/) {
             $run_opts_href->{is_nofm} = 1;
@@ -1496,7 +1508,13 @@ sub conv_jac_to_dat {
         }
 
         # Write to data files.
-        (my $jac_bname = $jac) =~ s/[.][\w]+$//;
+        (my $rpt_bname = $jac) =~ s/[.][\w]+$//;
+        $rpt_bname = sprintf(
+            "%s%s%s",
+            $run_opts_href->{dat_prepend},
+            $rpt_bname,
+            $run_opts_href->{dat_append},
+        );
         my %convs = (
             cmt1  => '%-15s',
             cmt2a => '%-14s',
@@ -1536,7 +1554,7 @@ sub conv_jac_to_dat {
             { # Settings
                 rpt_formats => $run_opts_href->{dat_fmts},
                 rpt_path    => $run_opts_href->{dat_path},
-                rpt_bname   => $jac_bname,
+                rpt_bname   => $rpt_bname,
                 begin_msg   => "collecting spectrometry results...",
                 prog_info   => $prog_info_href,
                 cmt_arr     => [
@@ -1667,21 +1685,25 @@ sub jac2dat {
             },
         );
         my %cmd_opts = ( # Command-line opts
-            jac_all  => qr/-?-a(?:ll)?/i,
-            dat_fmts => qr/-?-(?:dat_)?fmts?\s*=\s*/i,
-            dat_path => qr/-?-(?:dat_)?path\s*=\s*/i,
-            det      => qr/-?-det(?:ector)?\s*=\s*/i,
-            nofm     => qr/-?-nofm/,
-            nopause  => qr/-?-nopause/i,
+            jac_all     => qr/-?-a(?:ll)?/i,
+            dat_fmts    => qr/-?-(?:dat_)?fmts?\s*=\s*/i,
+            dat_path    => qr/-?-(?:dat_)?path\s*=\s*/i,
+            dat_prepend => qr/-?-(?:dat_)?prep(?:end)?\s*=\s*/i,
+            dat_append  => qr/-?-(?:dat_)?app(?:end)?\s*=\s*/i,
+            det         => qr/-?-det(?:ector)?\s*=\s*/i,
+            nofm        => qr/-?-nofm/,
+            nopause     => qr/-?-nopause/i,
         );
         my %run_opts = ( # Program run opts
-            jac_files  => [],
-            dat_fmts   => ['dat'],
-            dat_path   => '.',
-            det        => '',
-            det_sep    => '=',
-            is_nofm    => 0,
-            is_nopause => 0,
+            jac_files   => [],
+            dat_fmts    => ['dat'],
+            dat_path    => '.',
+            dat_prepend => '',
+            dat_append  => '',
+            det         => '',
+            det_sep     => '=',
+            is_nofm     => 0,
+            is_nopause  => 0,
         );
 
         # ARGV validation and parsing
@@ -1718,6 +1740,7 @@ jac2dat - Convert .jac/.jca files to various data formats
 
     perl jac2dat.pl [jac_files ...] [--all] [--det=det_file]
                     [--dat_fmts=ext ...] [--dat_path=path]
+                    [--dat_prepend=flag] [--dat_append=flag]
                     [--nofm] [--nopause]
 
 =head1 DESCRIPTION
@@ -1774,6 +1797,12 @@ jac2dat - Convert .jac/.jca files to various data formats
 
     --dat_path=path (short: --path, default: current working directory)
         The path in which the converted data files will be stored.
+
+    --dat_prepend=flag (short: --prep, default: empty)
+        A flag to be prepended to the names of output files.
+
+    --dat_append=flag (short: --app, default: empty)
+        A flag to be appended to the names of output files.
 
     --nofm
         Do not show the front matter at the beginning of the program.
