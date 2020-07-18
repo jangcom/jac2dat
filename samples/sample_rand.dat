@@ -2,7 +2,7 @@
 # jac2dat - Convert .jac/.jca files to various data formats
 # jac2dat v1.04 (2020-07-18)
 # Perl v5.30.1
-# Current time: 2020-07-18 17:28:12
+# Current time: 2020-07-18 17:45:34
 #
 # Jaewoong Jang
 # jangj@korea.ac.kr
@@ -18,14 +18,14 @@
 # Calibration functions
 #---------------------------------------------------------------------
 # Energy calibration date: 2018-04-19 14:19:21
-# Energy (keV)   = 6.942824E-001 + 4.994878E-001*$ch + 6.919887E-008*$ch**2
-# Peak FWHM (ch) = 2.076851E+000 + 8.814739E-003*sqrt($nrg) + 1.204853E-003*$nrg
+# Energy (keV)   = 6.942824e-001 + 4.994878e-001*$ch + 6.919887e-008*$ch**2
+# Peak FWHM (ch) = 2.076851e+000 + 8.814739e-003*sqrt($nrg) + 1.204853e-003*$nrg
 #
 # Efficiency calibration date: 2018-04-19 14:22:21
 # Efficiency expression: fitted
 # det_eff_knee: 180 keV
-# det_eff_bef_knee (cnt/gam)  = exp(-3.824022E+001 + 1.427534E+001*ln($nrg) - 1.452642E+000*ln($nrg)**2)
-# det_eff_from_knee (cnt/gam) = exp(1.470955E+000 - 1.018902E+000*ln($nrg) + 1.995309E-002*ln($nrg)**2)
+# det_eff_bef_knee (cnt/gam)  = exp(-3.824022e+001 + 1.427534e+001*ln($nrg) - 1.452642e+000*ln($nrg)**2)
+# det_eff_from_knee (cnt/gam) = exp(1.470955e+000 - 1.018902e+000*ln($nrg) + 1.995309e-002*ln($nrg)**2)
 #---------------------------------------------------------------------
 #---------------------------------------------------------------------
 # Time information

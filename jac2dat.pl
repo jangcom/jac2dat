@@ -169,7 +169,7 @@ sub validate_argv {
     # Terminate the program if the number of required arguments passed
     # is not sufficient.
     #
-    my $argv_req_num = shift; # (OPTIONAL) Number of required args
+    my $argv_req_num = shift;  # (OPTIONAL) Number of required args
     if (defined $argv_req_num) {
         my $argv_req_num_passed = grep $_ !~ /-/, @$argv_aref;
         if ($argv_req_num_passed < $argv_req_num) {
@@ -264,7 +264,7 @@ sub reduce_data {
     #
     # Default attributes
     #
-    my %flags = ( # Available data formats
+    my %flags = (  # Available data formats
         dat  => qr/^dat$/i,
         tex  => qr/^tex$/i,
         csv  => qr/^csv$/i,
@@ -280,7 +280,7 @@ sub reduce_data {
     );
     my %cols;
     my %rows;
-    my %strs = ( # Not to be modified via the user arguments
+    my %strs = (  # Not to be modified via the user arguments
         symbs    => {dat => "#",    tex => "%"   },
         eofs     => {dat => "#eof", tex => "%eof"},
         nan      => {
@@ -288,8 +288,8 @@ sub reduce_data {
             tex  => "{}",
             csv  => "",
             xlsx => "",
-            json => "", # Not related to its 'null'
-            yaml => "", # Not related to its '~'
+            json => "",  # Not related to its 'null'
+            yaml => "",  # Not related to its '~'
         },
         newlines => {
             dat => "\n",
@@ -297,24 +297,24 @@ sub reduce_data {
             csv => "\n",
         },
         dataset_seps => {
-            dat => "\n\n", # wrto gnuplot dataset structure
+            dat => "\n\n",  # wrto gnuplot dataset structure
         },
         indents  => {dat => "", tex => "  "},
         rules    => {
-            dat  => {}, # To be constructed
-            tex  => {   # Commands of the booktabs package
+            dat  => {},  # To be constructed
+            tex  => {    # Commands of the booktabs package
                 top => "\\toprule",
                 mid => "\\midrule",
                 bot => "\\bottomrule",
             },
-            xlsx => {   # Border indices (not borders)
+            xlsx => {  # Border indices (not borders)
                 # Refer to the following URL for the border indices:
                 # https://metacpan.org/pod/Excel::Writer::XLSX#set_border()
                 none    => 0,
                 top     => 2,
                 mid     => 2,
                 bot     => 2,
-                mid_bot => 2, # For single-rowed data
+                mid_bot => 2,  # For single-rowed data
             },
         },
     );
@@ -327,7 +327,7 @@ sub reduce_data {
     # Data format validation
     #
     @{$sets{rpt_formats}} = (keys %flags)
-        if first { /all/i } @{$sets{rpt_formats}}; # 'all' format
+        if first { /all/i } @{$sets{rpt_formats}};  # 'all' format
     foreach my $rpt_format (@{$sets{rpt_formats}}) {
         next if (first { $rpt_format =~ $_ } values %flags);
         croak "[$sub_name]: [$rpt_format]".
@@ -389,9 +389,9 @@ sub reduce_data {
     $cols{data_sep}{dat}  = " " unless exists $cols{data_sep}{dat};
     # TeX
     $cols{space_bef}{tex} = " " unless exists $cols{space_bef}{tex};
-    $cols{heads_sep}{tex} = "&"; # Immutable
+    $cols{heads_sep}{tex} = "&";  # Immutable
     $cols{space_aft}{tex} = " " unless exists $cols{space_aft}{tex};
-    $cols{data_sep}{tex}  = "&"; # Immutable
+    $cols{data_sep}{tex}  = "&";  # Immutable
     # DAT, TeX
     foreach (qw(dat tex)) {
         next if $cols{heads_sep}{$_} =~ /\t/; # Don't add spaces around a tab.
@@ -472,7 +472,7 @@ sub reduce_data {
         open $rpt_formats{$_}{fh}, '>:encoding(UTF-8)', $rpt_formats{$_}{fname};
         reduce_data_writing_part(
             $rpt_formats{$_}{fh},
-            $_, # Flag
+            $_,  # Flag
             \%flags,
             \%sets,
             \%strs,
@@ -507,7 +507,7 @@ sub reduce_data {
         # [CSV]
         my $csv;
         if ($_flag =~ $_flags{csv}) {
-            require Text::CSV; # vendor lib || cpanm
+            require Text::CSV;  # vendor lib || cpanm
             $csv = Text::CSV->new( { binary => 1 } )
                 or die "Cannot instantiate Text::CSV! ".Text::CSV->error_diag();
 
@@ -517,12 +517,12 @@ sub reduce_data {
         # [XLSX]
         my($workbook, $worksheet, %xlsx_formats);
         my($xlsx_row, $xlsx_col, $xlsx_col_init, $xlsx_col_scale_factor);
-        $xlsx_row                  = 1;   # Starting row number
-        $xlsx_col = $xlsx_col_init = 1;   # Starting col number
-        $xlsx_col_scale_factor     = 1.2; # Empirically determined
+        $xlsx_row                  = 1;    # Starting row number
+        $xlsx_col = $xlsx_col_init = 1;    # Starting col number
+        $xlsx_col_scale_factor     = 1.2;  # Empirically determined
         if ($_flag =~ $_flags{xlsx}) {
-            require Excel::Writer::XLSX; # vendor lib || cpanm
-            binmode($_fh); # fh can now be R/W in binary as well as in text
+            require Excel::Writer::XLSX;  # vendor lib || cpanm
+            binmode($_fh);  # fh can now be R/W in binary as well as in text
             $workbook = Excel::Writer::XLSX->new($_fh);
 
             # Define the worksheet name using the bare filename of the report.
@@ -576,7 +576,7 @@ sub reduce_data {
             $_cols{heads}[0]    = $_strs{symbs}{$_flag}." ".$_cols{heads}[0];
             $_cols{subheads}[0] = $_strs{symbs}{$_flag}." ".$_cols{subheads}[0];
         }
-        if ($_flag !~ $_flags{dat}) { # Make it unaffected by the prev dat call
+        if ($_flag !~ $_flags{dat}) {  # Make it unaffected by the prev dat call
             $_cols{heads}[0]    =~ s/^[^\w] //;
             $_cols{subheads}[0] =~ s/^[^\w] //;
         }
@@ -669,13 +669,13 @@ sub reduce_data {
 
         # [JSON]
         if ($_flag =~ $_flags{json}) {
-            use JSON; # vendor lib || cpanm
+            use JSON;  # vendor lib || cpanm
             print to_json(\%_cols, { pretty => 1 });
         }
 
         # [YAML]
         if ($_flag =~ $_flags{yaml}) {
-            use YAML; # vendor lib || cpanm
+            use YAML;  # vendor lib || cpanm
             print Dump(\%_cols);
         }
 
@@ -796,7 +796,7 @@ sub reduce_data {
                 $xlsx_row++,
                 $xlsx_col,
                 $_cols{heads},
-                $xlsx_formats{top}{none} # top rule formatted
+                $xlsx_formats{top}{none}  # top rule formatted
             );
             $worksheet->write_row(
                 $xlsx_row++,
@@ -845,8 +845,8 @@ sub reduce_data {
             #   blank lines, is inserted before beginning the next dataset.
             if (
                 $_flag =~ $_flags{dat} and
-                $_sets{num_rows_per_dataset} and # Make this loop optional.
-                $i != 0 and                      # Skip the first row.
+                $_sets{num_rows_per_dataset} and  # Make this loop optional.
+                $i != 0 and                       # Skip the first row.
                 $i % $_sets{num_rows_per_dataset} == 0
             ) {
                 print $_strs{dataset_seps}{$_flag};
@@ -926,12 +926,12 @@ sub reduce_data {
                         $xlsx_col,
                         $_cols{data_rowwise}[$i][$j] // $_strs{nan}{$_flag},
                         ($i == 0 and $i == $_rows{idx_last}) ?
-                            $xlsx_formats{mid_bot}{$_align} : # For single-rowed
+                            $xlsx_formats{mid_bot}{$_align} :  # For single-rowed
                         $i == 0 ?
-                            $xlsx_formats{mid}{$_align} : # mid rule formatted
+                            $xlsx_formats{mid}{$_align} :  # mid rule formatted
                         $i == $_rows{idx_last} ?
-                            $xlsx_formats{bot}{$_align} : # bot rule formatted
-                            $xlsx_formats{none}{$_align}  # Default: no rule
+                            $xlsx_formats{bot}{$_align} :  # bot rule formatted
+                            $xlsx_formats{none}{$_align}   # Default: no rule
                     );
                     $xlsx_col++;
                     $xlsx_row++ if $j == $_cols{idx_multiple};
@@ -1087,7 +1087,7 @@ sub show_elapsed_real_time {
 
     # Parse optional arguments.
     my $is_return_copy = 0;
-    my @del; # Garbage can
+    my @del;  # Garbage can
     foreach (@opts) {
         if (/copy/i) {
             $is_return_copy = 1;
@@ -1151,7 +1151,7 @@ sub construct_timestamps {
     (my $hm = $hms) =~ s/[0-9]{2}$//;
 
     my %datetimes = (
-        none   => '', # Used for timestamp suppressing
+        none   => '',  # Used for timestamp suppressing
         ymd    => $ymd,
         hms    => $hms,
         hm     => $hm,
@@ -1188,13 +1188,13 @@ sub parse_argv {
         $cmd_opts_href,
         $run_opts_href,
     ) = @_;
-    my %cmd_opts = %$cmd_opts_href; # For regexes
+    my %cmd_opts = %$cmd_opts_href;  # For regexes
 
     # Parser: Overwrite default run options if requested by the user.
     my $field_sep = ',';
     foreach (@$argv_aref) {
         # .jac/.jca files
-        if (/[.]j[ac]$/i and -e) {
+        if (/[.]j[ac]/i) {
             push @{$run_opts_href->{jac_files}}, $_;
         }
 
@@ -1203,38 +1203,38 @@ sub parse_argv {
             push @{$run_opts_href->{jac_files}}, glob '*.jac *.jca';
         }
 
-        # A file containing conversion formulas of a detector
+        # A file containing conversion functions of a detector
         if (/$cmd_opts{det}/i) {
             s/$cmd_opts{det}//i;
             $run_opts_href->{det} = $_ if -e;
             if (not -e) {
                 print "Detector file [$_] NOT found in the CWD.";
-                print " Default conversion formulas will be used.\n\n";
+                print " Default conversion functions will be used.\n\n";
             }
         }
 
-        # Data formats
-        if (/$cmd_opts{dat_fmts}/i) {
-            s/$cmd_opts{dat_fmts}//i;
-            @{$run_opts_href->{dat_fmts}} = split /$field_sep/;
+        # Output formats
+        if (/$cmd_opts{out_fmts}/i) {
+            s/$cmd_opts{out_fmts}//i;
+            @{$run_opts_href->{out_fmts}} = split /$field_sep/;
         }
 
-        # Data path
-        if (/$cmd_opts{dat_path}/i) {
-            s/$cmd_opts{dat_path}//i;
-            $run_opts_href->{dat_path} = $_;
+        # Output path
+        if (/$cmd_opts{out_path}/i) {
+            s/$cmd_opts{out_path}//i;
+            $run_opts_href->{out_path} = $_;
         }
 
-        # Prepending data flag
-        if (/$cmd_opts{dat_prepend}/i) {
-            s/$cmd_opts{dat_prepend}//i;
-            $run_opts_href->{dat_prepend} = $_;
+        # Prepending flag
+        if (/$cmd_opts{out_prepend}/i) {
+            s/$cmd_opts{out_prepend}//i;
+            $run_opts_href->{out_prepend} = $_;
         }
 
-        # Appending data flag
-        if (/$cmd_opts{dat_append}/i) {
-            s/$cmd_opts{dat_append}//i;
-            $run_opts_href->{dat_append} = $_;
+        # Appending flag
+        if (/$cmd_opts{out_append}/i) {
+            s/$cmd_opts{out_append}//i;
+            $run_opts_href->{out_append} = $_;
         }
 
         # The front matter won't be displayed at the beginning of the program.
@@ -1254,7 +1254,7 @@ sub parse_argv {
 
 
 sub read_in_det {
-    # """Read in the conversion formulas of a detector."""
+    # """Read in the conversion functions of a detector."""
 
     my(
         $run_opts_href,
@@ -1271,7 +1271,7 @@ sub read_in_det {
         next if not /$det_sep/;
 
         my($k, $v) = (split /\s*$det_sep\s*/)[0, 1];
-        $v =~ s/\s*#.*//; # Suppress an inline comment.
+        $v =~ s/\s*#.*//;  # Suppress an inline comment.
 
         # Nonfitted efficiency
         if ($k =~ /eff\([0-9.]+\)/i) {
@@ -1287,7 +1287,7 @@ sub read_in_det {
         else { $det_href->{$k} = $v }
     }
     close $det_fh;
-    print "[$det] has been read in.\n\n";
+    print "[$det] read in.\n\n";
 
     return;
 }
@@ -1365,9 +1365,9 @@ sub conv_jac_to_dat {
                            ' + 1.204853E-003*$nrg',
         # eff_u8.pdf
         eff_calib_date  => '2018-04-19 14:22:21',
-        eff_expr        => 'fitted', # fitted, nonfitted
+        eff_expr        => 'fitted',  # fitted, nonfitted
         nonfitted_effs  => {},
-        knee            => 180, # keV
+        knee            => 180,  # keV
         eff_bef_knee    => 'exp(-3.824022E+001 + 1.427534E+001*log($nrg)'.
                            ' - 1.452642E+000*log($nrg)**2)',
         eff_from_knee   => 'exp(1.470955E+000 - 1.018902E+000*log($nrg)'.
@@ -1375,7 +1375,12 @@ sub conv_jac_to_dat {
     );
     read_in_det($run_opts_href, \%det) if -e $run_opts_href->{det};
 
-    say "Calibration conditions:";
+    print "Calibration conditions";
+    printf(
+        " (%s)",
+        -e $run_opts_href->{det} ? $run_opts_href->{det} : 'default'
+    );
+    say ":";
     say "-" x 70;
     foreach (sort keys %det) {
         printf(
@@ -1395,8 +1400,8 @@ sub conv_jac_to_dat {
     printf(
         "The following JAC file%s will be converted to [%s%s]:\n",
         $run_opts_href->{jac_files}[1] ? 's' : '',
-        $run_opts_href->{dat_path},
-        $run_opts_href->{dat_path} =~ /\/$/ ? '' : '/',
+        $run_opts_href->{out_path},
+        $run_opts_href->{out_path} =~ /\/$/ ? '' : '/',
     );
     say "-" x 70;
     say "[$_]" for @{$run_opts_href->{jac_files}};
@@ -1413,12 +1418,12 @@ sub conv_jac_to_dat {
 
     # Work on the JAC files.
     my %fmt_specifiers = (
-        nrg   => '%.7f', # Energy
+        nrg   => '%.7f',  # Energy
         fwhm  => '%.7f',
         eff   => '%.10f',
-        cps   => '%.5f', # Count per second
+        cps   => '%.5f',  # Count per second
         gamma => '%.5f',
-        gps   => '%.5f', # Gamma per second
+        gps   => '%.5f',  # Gamma per second
     );
     foreach my $jac (@{$run_opts_href->{jac_files}}) {
         my(@counts, @gammas);
@@ -1491,9 +1496,9 @@ sub conv_jac_to_dat {
             #
             push @$arr_ref_to_data, (
                 $ch, # ch
-                sprintf("$fmt_specifiers{nrg}", $ret{nrg}),   # f(ch)
-                sprintf("$fmt_specifiers{fwhm}", $ret{fwhm}), # f(nrg)
-                sprintf("$fmt_specifiers{eff}", $ret{eff}),   # f(nrg)
+                sprintf("$fmt_specifiers{nrg}", $ret{nrg}),    # f(ch)
+                sprintf("$fmt_specifiers{fwhm}", $ret{fwhm}),  # f(nrg)
+                sprintf("$fmt_specifiers{eff}", $ret{eff}),    # f(nrg)
                 $counts[$ch_idx],
                 sprintf(
                     "$fmt_specifiers{cps}",
@@ -1510,13 +1515,14 @@ sub conv_jac_to_dat {
             );
         }
 
-        # Write to data files.
-        (my $rpt_bname = $jac) =~ s/[.][\w]+$//;
+        # Write to output files.
+        my $rpt_bname = basename($jac);
+        $rpt_bname =~ s/[.][\w]+$//;  # An extensionless filename
         $rpt_bname = sprintf(
             "%s%s%s",
-            $run_opts_href->{dat_prepend},
+            $run_opts_href->{out_prepend},
             $rpt_bname,
-            $run_opts_href->{dat_append},
+            $run_opts_href->{out_append},
         );
         my %convs = (
             cmt1  => '%-15s',
@@ -1554,9 +1560,9 @@ sub conv_jac_to_dat {
                 );
         }
         reduce_data(
-            { # Settings
-                rpt_formats => $run_opts_href->{dat_fmts},
-                rpt_path    => $run_opts_href->{dat_path},
+            {  # Settings
+                rpt_formats => $run_opts_href->{out_fmts},
+                rpt_path    => $run_opts_href->{out_path},
                 rpt_bname   => $rpt_bname,
                 begin_msg   => "collecting spectrometry results...",
                 prog_info   => $prog_info_href,
@@ -1579,10 +1585,10 @@ sub conv_jac_to_dat {
                     ),
                     "-" x 69,
                     #
-                    # Comment 2: Conversion formulas
+                    # Comment 2: Conversion functions
                     #
                     "-" x 69,
-                    " Calibration formulas",
+                    " Calibration functions",
                     "-" x 69,
                     sprintf(
                         " Energy calibration date: %s",
@@ -1633,13 +1639,13 @@ sub conv_jac_to_dat {
                     "-" x 69,
                 ],
             },
-            { # Columnar
-                size => 8, # Used for column size validation
+            {  # Columnar
+                size => 8,  # Used for column size validation
                 heads => [
                     "Channel",
-                    "Gamma energy",    # f(ch)
-                    "Peak FWHM",       # f(nrg)
-                    "Peak efficiency", # f(nrg)
+                    "Gamma energy",     # f(ch)
+                    "Peak FWHM",        # f(nrg)
+                    "Peak efficiency",  # f(nrg)
                     "Count",
                     "Count per second or \"cps\"",
                     "Gamma",
@@ -1687,22 +1693,23 @@ sub jac2dat {
                 mail => 'jangj@korea.ac.kr',
             },
         );
-        my %cmd_opts = ( # Command-line opts
+        my %cmd_opts = (  # Command-line opts
             jac_all     => qr/-?-a(?:ll)?/i,
-            dat_fmts    => qr/-?-(?:dat_)?fmts?\s*=\s*/i,
-            dat_path    => qr/-?-(?:dat_)?path\s*=\s*/i,
-            dat_prepend => qr/-?-(?:dat_)?prep(?:end)?\s*=\s*/i,
-            dat_append  => qr/-?-(?:dat_)?app(?:end)?\s*=\s*/i,
+            # dat_: For backward compatibility
+            out_fmts    => qr/-?-(?:dat_|out_)?fmts?\s*=\s*/i,
+            out_path    => qr/-?-(?:dat_|out_)?path\s*=\s*/i,
+            out_prepend => qr/-?-(?:dat_|out_)?prep(?:end)?\s*=\s*/i,
+            out_append  => qr/-?-(?:dat_|out_)?app(?:end)?\s*=\s*/i,
             det         => qr/-?-det(?:ector)?\s*=\s*/i,
             nofm        => qr/-?-nofm/,
             nopause     => qr/-?-nopause/i,
         );
-        my %run_opts = ( # Program run opts
+        my %run_opts = (  # Program run opts
             jac_files   => [],
-            dat_fmts    => ['dat'],
-            dat_path    => '.',
-            dat_prepend => '',
-            dat_append  => '',
+            out_fmts    => ['dat'],
+            out_path    => '.',
+            out_prepend => '',
+            out_append  => '',
             det         => '',
             det_sep     => '=',
             is_nofm     => 0,
@@ -1742,8 +1749,8 @@ jac2dat - Convert .jac/.jca files to various data formats
 =head1 SYNOPSIS
 
     perl jac2dat.pl [jac_files ...] [--all] [--det=det_file]
-                    [--dat_fmts=ext ...] [--dat_path=path]
-                    [--dat_prepend=flag] [--dat_append=flag]
+                    [--out_fmts=ext ...] [--out_path=path]
+                    [--out_prepend=flag] [--out_append=flag]
                     [--nofm] [--nopause]
 
 =head1 DESCRIPTION
@@ -1775,14 +1782,14 @@ jac2dat - Convert .jac/.jca files to various data formats
         All .jac/.jca files in the current working directory will be converted.
 
     --detector=det_file (short: --det)
-        A file containing conversion formulas of a detector
-        such as channel-to-energy and channel-to-FWHM formulas.
+        A file containing conversion functions of a detector
+        such as channel-to-energy and channel-to-FWHM functions.
         Key-value pairs contained in this file take precedence
-        over the predefined formulas.
+        over the predefined functions.
         Refer to the sample file 'detector.j2d' for the syntax.
 
-    --dat_fmts=ext ... (short: --fmts, default: dat)
-        Data formats. Multiple formats are separated by the comma (,).
+    --out_fmts=ext ... (short: --fmts, default: dat)
+        Output formats. Multiple formats are separated by the comma (,).
         all
             All of the following ext's.
         dat
@@ -1798,13 +1805,13 @@ jac2dat - Convert .jac/.jca files to various data formats
         yaml
             YAML
 
-    --dat_path=path (short: --path, default: current working directory)
-        The path in which the converted data files will be stored.
+    --out_path=path (short: --path, default: current working directory)
+        The output path.
 
-    --dat_prepend=flag (short: --prep, default: empty)
+    --out_prepend=flag (short: --prep, default: empty)
         A flag to be prepended to the names of output files.
 
-    --dat_append=flag (short: --app, default: empty)
+    --out_append=flag (short: --app, default: empty)
         A flag to be appended to the names of output files.
 
     --nofm
@@ -1815,9 +1822,9 @@ jac2dat - Convert .jac/.jca files to various data formats
 
 =head1 EXAMPLES
 
-    perl jac2dat.pl 1200s.jac --fmts=dat,xlsx --nopause
-    perl jac2dat.pl --all --fmts=all --det=det_fitted.j2d
-    perl jac2dat.pl sample_rand.jac --nopause
+    perl jac2dat.pl lt1200s.jac --fmts=dat,xlsx
+    perl jac2dat.pl ./samples/sample_rand.jac --det=./j2d/det_fitted.j2d
+    perl jac2dat.pl ./samples/sample_rand.jac --nopause
 
 =head1 REQUIREMENTS
 
