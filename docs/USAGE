@@ -5,7 +5,7 @@ SYNOPSIS
         perl jac2dat.pl [jac_files ...] [--all] [--det=det_file]
                         [--out_fmts=ext ...] [--out_path=path]
                         [--out_prepend=flag] [--out_append=flag]
-                        [--nofm] [--nopause]
+                        [--noyn] [--nofm] [--nopause]
 
 DESCRIPTION
         jac2dat converts .jac/.jca files to various data formats.
@@ -66,6 +66,9 @@ OPTIONS
         --out_append=flag (short: --app, default: empty)
             A flag to be appended to the names of output files.
 
+        --noyn
+            Run the program without prompting a y/n selection message.
+
         --nofm
             Do not show the front matter at the beginning of the program.
 
@@ -88,7 +91,7 @@ AUTHOR
     Jaewoong Jang <jangj@korea.ac.kr>
 
 COPYRIGHT
-    Copyright (c) 2019-2020 Jaewoong Jang
+    Copyright (c) 2019-2023 Jaewoong Jang
 
 LICENSE
     This software is available under the MIT license; the license

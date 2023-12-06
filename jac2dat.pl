@@ -15,7 +15,7 @@ use constant HASH  => ref {};
 
 
 our $VERSION = '1.04';
-our $LAST    = '2020-07-18';
+our $LAST    = '2023-12-06';
 our $FIRST   = '2019-02-04';
 
 
@@ -1237,6 +1237,11 @@ sub parse_argv {
             $run_opts_href->{out_append} = $_;
         }
 
+        # The program will run without prompting a y/n selection message.
+        if (/$cmd_opts{noyn}/) {
+            $run_opts_href->{is_noyn} = 1;
+        }
+
         # The front matter won't be displayed at the beginning of the program.
         if (/$cmd_opts{nofm}/) {
             $run_opts_href->{is_nofm} = 1;
@@ -1408,12 +1413,14 @@ sub conv_jac_to_dat {
     say "-" x 70;
 
     # yn prompt
-    my $yn_msg = "Run? (y/n)> ";
-    print $yn_msg;
-    while (chomp(my $yn = <STDIN>)) {
-        last   if $yn =~ /\by\b/i;
-        return if $yn =~ /\bn\b/i;
+    unless ($run_opts_href->{is_noyn}) {
+        my $yn_msg = "Run? (y/n)> ";
         print $yn_msg;
+        while (chomp(my $yn = <STDIN>)) {
+            last   if $yn =~ /\by\b/i;
+            return if $yn =~ /\bn\b/i;
+            print $yn_msg;
+        }
     }
 
     # Work on the JAC files.
@@ -1701,6 +1708,7 @@ sub jac2dat {
             out_prepend => qr/-?-(?:dat_|out_)?prep(?:end)?\s*=\s*/i,
             out_append  => qr/-?-(?:dat_|out_)?app(?:end)?\s*=\s*/i,
             det         => qr/-?-det(?:ector)?\s*=\s*/i,
+            noyn        => qr/-?-noyn/,
             nofm        => qr/-?-nofm/,
             nopause     => qr/-?-nopause/i,
         );
@@ -1712,6 +1720,7 @@ sub jac2dat {
             out_append  => '',
             det         => '',
             det_sep     => '=',
+            is_noyn     => 0,
             is_nofm     => 0,
             is_nopause  => 0,
         );
@@ -1751,7 +1760,7 @@ jac2dat - Convert .jac/.jca files to various data formats
     perl jac2dat.pl [jac_files ...] [--all] [--det=det_file]
                     [--out_fmts=ext ...] [--out_path=path]
                     [--out_prepend=flag] [--out_append=flag]
-                    [--nofm] [--nopause]
+                    [--noyn] [--nofm] [--nopause]
 
 =head1 DESCRIPTION
 
@@ -1814,6 +1823,9 @@ jac2dat - Convert .jac/.jca files to various data formats
     --out_append=flag (short: --app, default: empty)
         A flag to be appended to the names of output files.
 
+    --noyn
+        Run the program without prompting a y/n selection message.
+
     --nofm
         Do not show the front matter at the beginning of the program.
 
@@ -1841,7 +1853,7 @@ Jaewoong Jang <jangj@korea.ac.kr>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2019-2020 Jaewoong Jang
+Copyright (c) 2019-2023 Jaewoong Jang
 
 =head1 LICENSE
 
