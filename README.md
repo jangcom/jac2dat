@@ -34,7 +34,7 @@
 <pre><code>    perl jac2dat.pl [jac_files ...] [--all] [--det=det_file]
                     [--out_fmts=ext ...] [--out_path=path]
                     [--out_prepend=flag] [--out_append=flag]
-                    [--nofm] [--nopause]</code></pre>
+                    [--noyn] [--nofm] [--nopause]</code></pre>
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
 
@@ -97,6 +97,9 @@
     --out_append=flag (short: --app, default: empty)
         A flag to be appended to the names of output files.
 
+    --noyn
+        Run the program without prompting a y/n selection message.
+
     --nofm
         Do not show the front matter at the beginning of the program.
 
@@ -124,7 +127,7 @@
 
 <h1 id="COPYRIGHT">COPYRIGHT</h1>
 
-<p>Copyright (c) 2019-2020 Jaewoong Jang</p>
+<p>Copyright (c) 2019-2023 Jaewoong Jang</p>
 
 <h1 id="LICENSE">LICENSE</h1>
 
