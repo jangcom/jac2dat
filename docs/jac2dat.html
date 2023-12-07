@@ -30,7 +30,8 @@
 
 <h1 id="SYNOPSIS">SYNOPSIS</h1>
 
-<pre><code>    perl jac2dat.pl [jac_files ...] [--all] [--det=det_file]
+<pre><code>    perl jac2dat.pl [jac_files ...] [--all] [--inp_encoding]
+                    [--det=det_file] [--out_encoding]
                     [--out_fmts=ext ...] [--out_path=path]
                     [--out_prepend=flag] [--out_append=flag]
                     [--noyn] [--nofm] [--nopause]</code></pre>
@@ -38,17 +39,18 @@
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
 
 <pre><code>    jac2dat converts .jac/.jca files to various data formats.
-    - JAC file: The gamma spectra format of the Science and Technology Agency
-                (now the MEXT), Japan. For details, refer to the catalogue of
-                DS-P1001 Gamma Station, SII.
+    - JAC file: The gamma spectra format of MEXT (previously the Science and
+                Technology Agency), Japan. For details, refer to the catalogue
+                of DS-P1001 Gamma Station, SII.
                 A .jac/.jca file consists of only one column, in which
                 gamma counts are stored in ascending order of channels.
-                The first three records are &quot;not&quot; gamma counts, and
+                The first four records are &quot;not&quot; gamma counts, and
                 are used for special purposes:
                 - Record 1: Live time (duration)
                 - Record 2: Real time (duration)
                 - Record 3: Acquired time
-    - DAT file: A plottable text file converted from a .jac/.jca file.
+                - Record 4: Comment
+    - DAT file: A plain text file converted from a .jac/.jca file.
                 A .dat file consists of multiple columns, in which
                 channels, gamma energies, peak FWHMs, peak efficiencies,
                 counts, count per second (cps), gammas, and
@@ -63,12 +65,24 @@
     --all (short: -a)
         All .jac/.jca files in the current working directory will be converted.
 
+    --inp_encoding (default: UTF-8)
+        Specify the encoding of .jac/.jca files to be converted.
+        Use one of the supported encodings listed in the following URL.
+        https://perldoc.perl.org/Encode::Supported#Supported-Encodings
+        Use cp932 for .jac/.jca files encoded in Shift JIS.
+
     --detector=det_file (short: --det)
         A file containing conversion functions of a detector
         such as channel-to-energy and channel-to-FWHM functions.
         Key-value pairs contained in this file take precedence
         over the predefined functions.
         Refer to the sample file &#39;detector.j2d&#39; for the syntax.
+
+    --out_encoding (default: UTF-8)
+        Specify the encoding of converted files.
+        Use one of the supported encodings listed in the following URL.
+        https://perldoc.perl.org/Encode::Supported#Supported-Encodings
+        Use UTF-8 unless you specifically need a different encoding.
 
     --out_fmts=ext ... (short: --fmts, default: dat)
         Output formats. Multiple formats are separated by the comma (,).
