@@ -66,7 +66,7 @@
     --all (short: -a)
         All .jac/.jca files in the current working directory will be converted.
 
-    --inp_encoding (default: UTF-8)
+    --inp_encoding (default: cp932)
         Specify the encoding of .jac/.jca files to be converted.
         Use one of the supported encodings listed in the following URL.
         https://perldoc.perl.org/Encode::Supported#Supported-Encodings
