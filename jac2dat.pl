@@ -1457,7 +1457,10 @@ sub conv_jac_to_dat {
             $run_opts_href->{inp_encoding},
         );
         open my $jac_fh, $jac_fh_mode, $jac;
-        push @counts, chomp() for <$jac_fh>;
+        foreach (<$jac_fh>) {
+            chomp($_);
+            push @counts, $_;
+        }
         close $jac_fh;
 
         # Inspect the number of records in the .jac/.jca file and warn
@@ -1683,7 +1686,7 @@ sub conv_jac_to_dat {
                     "-" x 69,
                     " Comment embedded in .jac/.jca",
                     "-" x 69,
-                    " $cmt_in_jac",
+                    $cmt_in_jac eq ""? " (blank)": " $cmt_in_jac",
                     "-" x 69,
                 ],
             },
