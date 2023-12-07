@@ -14,7 +14,7 @@ use constant ARRAY => ref [];
 use constant HASH  => ref {};
 
 
-our $VERSION = '1.04';
+our $VERSION = '1.05';
 our $LAST    = '2023-12-06';
 our $FIRST   = '2019-02-04';
 
@@ -273,10 +273,11 @@ sub reduce_data {
         yaml => qr/^yaml$/i,
     );
     my %sets = (
-        rpt_formats => ['dat', 'tex'],
-        rpt_path    => "./",
-        rpt_bname   => "rpt",
-        begin_msg   => "generating data reduction reports...",
+        out_encoding => 'UTF-8',
+        rpt_formats  => ['dat', 'tex'],
+        rpt_path     => "./",
+        rpt_bname    => "rpt",
+        begin_msg    => "generating data reduction reports...",
     );
     my %cols;
     my %rows;
@@ -469,7 +470,8 @@ sub reduce_data {
     mkdir $sets{rpt_path} if not -e $sets{rpt_path};
     chdir $sets{rpt_path};
     foreach (@{$sets{rpt_formats}}) {
-        open $rpt_formats{$_}{fh}, '>:encoding(UTF-8)', $rpt_formats{$_}{fname};
+        my $rpt_fh_mode = sprintf(">:encoding(%s)", $sets{out_encoding});
+        open $rpt_formats{$_}{fh}, $rpt_fh_mode, $rpt_formats{$_}{fname};
         reduce_data_writing_part(
             $rpt_formats{$_}{fh},
             $_,  # Flag
@@ -1193,14 +1195,20 @@ sub parse_argv {
     # Parser: Overwrite default run options if requested by the user.
     my $field_sep = ',';
     foreach (@$argv_aref) {
-        # .jac/.jca files
+        # Input .jac/.jca files
         if (/[.]j[ac]/i) {
             push @{$run_opts_href->{jac_files}}, $_;
         }
 
-        # All .jac/.jca files in the current working directory
+        # Read in all .jac/.jca files in the current working directory.
         if (/$cmd_opts{jac_all}/) {
             push @{$run_opts_href->{jac_files}}, glob '*.jac *.jca';
+        }
+
+        # The encoding of input .jac/.jca files
+        if (/$cmd_opts{inp_encoding}/i) {
+            s/$cmd_opts{inp_encoding}//i;
+            $run_opts_href->{inp_encoding} = $_;
         }
 
         # A file containing conversion functions of a detector
@@ -1211,6 +1219,12 @@ sub parse_argv {
                 print "Detector file [$_] NOT found in the CWD.";
                 print " Default conversion functions will be used.\n\n";
             }
+        }
+
+        # The encoding of output converted files
+        if (/$cmd_opts{out_encoding}/i) {
+            s/$cmd_opts{out_encoding}//i;
+            $run_opts_href->{out_encoding} = $_;
         }
 
         # Output formats
@@ -1435,32 +1449,50 @@ sub conv_jac_to_dat {
     foreach my $jac (@{$run_opts_href->{jac_files}}) {
         my(@counts, @gammas);
 
-        # Read in the content of a JAC file.
-        open my $jac_fh, '<', $jac;
-        foreach (<$jac_fh>) {
-            # Read in nonblank lines and remove the newline characters.
-            chomp($_);
-            push @counts, $_ if $_ !~ /^$/;
-        }
+        # Read in the content of a .jac/.jca file.
+        # Use chomp() to remove newlines before storing the lines
+        # to the counts array.
+        my $jac_fh_mode = sprintf(
+            "<:encoding(%s)",
+            $run_opts_href->{inp_encoding},
+        );
+        open my $jac_fh, $jac_fh_mode, $jac;
+        push @counts, chomp() for <$jac_fh>;
         close $jac_fh;
 
+        # Inspect the number of records in the .jac/.jca file and warn
+        # if it is not an integer multiple of 4096.
+        my $counts_size = @counts;
+        print(
+            "!!! Warning !!!\n".
+            "The number of records in [$jac], [$counts_size],".
+            " is not an integer multiple of 4096."
+        ) if $counts_size != 0 and $counts_size % 4096 != 0;
+
         # Construct columnar data.
-        my($ch, %ret, %times);
+        my($ch, %ret, %times, $cmt_in_jac);
         my $arr_ref_to_data = [];
         for (my $ch_idx=0; $ch_idx<=$#counts; $ch_idx++) {
             #
-            # The first three non-count records contain time information.
-            # Extract the time information to be used as comments and
-            # assign zeros to prevent errors in calc_nrg_fwhm_eff_using().
+            # The first four records contain data other than gamma-ray counts,
+            # the first three of which are time information and the last of
+            # which is a comment embedded in the .jac/jca file.
+            # If there was no comment in the corresponding binary file of
+            # a .jac/jca file, the fourth record will be empty, but not undef.
+            # Retrieve the four non-count records which will be mirrored in
+            # the converted files, and assign zero to their indices to avoid
+            # errors in calc_nrg_fwhm_eff_using().
             # e.g.
             # [0] 1200
             # [1] 1206
             # [2] 2019-01-17 09:21:52
+            # [3] some_comment
             #
-            if ($ch_idx =~ /\b[0-2]\b/) {
+            if ($ch_idx =~ /\b[0-3]\b/) {
                 $times{live_time} = $counts[$ch_idx] if $ch_idx == 0;
                 $times{real_time} = $counts[$ch_idx] if $ch_idx == 1;
                 $times{acqu_time} = $counts[$ch_idx] if $ch_idx == 2;
+                $cmt_in_jac = $counts[$ch_idx] if $ch_idx == 3;
                 $counts[$ch_idx] = 0;
 #                say "\$counts[$ch_idx]: $counts[$ch_idx]"; # For debugging
             }
@@ -1568,12 +1600,13 @@ sub conv_jac_to_dat {
         }
         reduce_data(
             {  # Settings
-                rpt_formats => $run_opts_href->{out_fmts},
-                rpt_path    => $run_opts_href->{out_path},
-                rpt_bname   => $rpt_bname,
-                begin_msg   => "collecting spectrometry results...",
-                prog_info   => $prog_info_href,
-                cmt_arr     => [
+                out_encoding => $run_opts_href->{out_encoding},
+                rpt_formats  => $run_opts_href->{out_fmts},
+                rpt_path     => $run_opts_href->{out_path},
+                rpt_bname    => $rpt_bname,
+                begin_msg    => "collecting spectrometry results...",
+                prog_info    => $prog_info_href,
+                cmt_arr      => [
                     #
                     # Comment 1: Gamma-ray detector information
                     #
@@ -1644,6 +1677,14 @@ sub conv_jac_to_dat {
                         $times{acqu_time},
                     ),
                     "-" x 69,
+                    #
+                    # Comment 4: A comment, if any, in the .jac/.jca file
+                    #
+                    "-" x 69,
+                    " Comment embedded in .jac/.jca",
+                    "-" x 69,
+                    " $cmt_in_jac",
+                    "-" x 69,
                 ],
             },
             {  # Columnar
@@ -1701,28 +1742,32 @@ sub jac2dat {
             },
         );
         my %cmd_opts = (  # Command-line opts
-            jac_all     => qr/-?-a(?:ll)?/i,
+            jac_all      => qr/-?-a(?:ll)?/i,
+            inp_encoding => qr/-?-inp_encoding\s*=\s*/i,
+            det          => qr/-?-det(?:ector)?\s*=\s*/i,
             # dat_: For backward compatibility
-            out_fmts    => qr/-?-(?:dat_|out_)?fmts?\s*=\s*/i,
-            out_path    => qr/-?-(?:dat_|out_)?path\s*=\s*/i,
-            out_prepend => qr/-?-(?:dat_|out_)?prep(?:end)?\s*=\s*/i,
-            out_append  => qr/-?-(?:dat_|out_)?app(?:end)?\s*=\s*/i,
-            det         => qr/-?-det(?:ector)?\s*=\s*/i,
-            noyn        => qr/-?-noyn/,
-            nofm        => qr/-?-nofm/,
-            nopause     => qr/-?-nopause/i,
+            out_encoding => qr/-?-(dat|out)_encoding\s*=\s*/i,
+            out_fmts     => qr/-?-(?:dat_|out_)?fmts?\s*=\s*/i,
+            out_path     => qr/-?-(?:dat_|out_)?path\s*=\s*/i,
+            out_prepend  => qr/-?-(?:dat_|out_)?prep(?:end)?\s*=\s*/i,
+            out_append   => qr/-?-(?:dat_|out_)?app(?:end)?\s*=\s*/i,
+            noyn         => qr/-?-noyn/,
+            nofm         => qr/-?-nofm/,
+            nopause      => qr/-?-nopause/i,
         );
         my %run_opts = (  # Program run opts
-            jac_files   => [],
-            out_fmts    => ['dat'],
-            out_path    => '.',
-            out_prepend => '',
-            out_append  => '',
-            det         => '',
-            det_sep     => '=',
-            is_noyn     => 0,
-            is_nofm     => 0,
-            is_nopause  => 0,
+            jac_files    => [],
+            inp_encoding => 'UTF-8',
+            det          => '',
+            det_sep      => '=',
+            out_encoding => 'UTF-8',
+            out_fmts     => ['dat'],
+            out_path     => '.',
+            out_prepend  => '',
+            out_append   => '',
+            is_noyn      => 0,
+            is_nofm      => 0,
+            is_nopause   => 0,
         );
 
         # ARGV validation and parsing
@@ -1757,7 +1802,8 @@ jac2dat - Convert .jac/.jca files to various data formats
 
 =head1 SYNOPSIS
 
-    perl jac2dat.pl [jac_files ...] [--all] [--det=det_file]
+    perl jac2dat.pl [jac_files ...] [--all] [--inp_encoding]
+                    [--det=det_file] [--out_encoding]
                     [--out_fmts=ext ...] [--out_path=path]
                     [--out_prepend=flag] [--out_append=flag]
                     [--noyn] [--nofm] [--nopause]
@@ -1765,17 +1811,18 @@ jac2dat - Convert .jac/.jca files to various data formats
 =head1 DESCRIPTION
 
     jac2dat converts .jac/.jca files to various data formats.
-    - JAC file: The gamma spectra format of the Science and Technology Agency
-                (now the MEXT), Japan. For details, refer to the catalogue of
-                DS-P1001 Gamma Station, SII.
+    - JAC file: The gamma spectra format of MEXT (previously the Science and
+                Technology Agency), Japan. For details, refer to the catalogue
+                of DS-P1001 Gamma Station, SII.
                 A .jac/.jca file consists of only one column, in which
                 gamma counts are stored in ascending order of channels.
-                The first three records are "not" gamma counts, and
+                The first four records are "not" gamma counts, and
                 are used for special purposes:
                 - Record 1: Live time (duration)
                 - Record 2: Real time (duration)
                 - Record 3: Acquired time
-    - DAT file: A plottable text file converted from a .jac/.jca file.
+                - Record 4: Comment
+    - DAT file: A plain text file converted from a .jac/.jca file.
                 A .dat file consists of multiple columns, in which
                 channels, gamma energies, peak FWHMs, peak efficiencies,
                 counts, count per second (cps), gammas, and
@@ -1790,12 +1837,24 @@ jac2dat - Convert .jac/.jca files to various data formats
     --all (short: -a)
         All .jac/.jca files in the current working directory will be converted.
 
+    --inp_encoding (default: UTF-8)
+        Specify the encoding of .jac/.jca files to be converted.
+        Use one of the supported encodings listed in the following URL.
+        https://perldoc.perl.org/Encode::Supported#Supported-Encodings
+        Use cp932 for .jac/.jca files encoded in Shift JIS.
+
     --detector=det_file (short: --det)
         A file containing conversion functions of a detector
         such as channel-to-energy and channel-to-FWHM functions.
         Key-value pairs contained in this file take precedence
         over the predefined functions.
         Refer to the sample file 'detector.j2d' for the syntax.
+
+    --out_encoding (default: UTF-8)
+        Specify the encoding of converted files.
+        Use one of the supported encodings listed in the following URL.
+        https://perldoc.perl.org/Encode::Supported#Supported-Encodings
+        Use UTF-8 unless you specifically need a different encoding.
 
     --out_fmts=ext ... (short: --fmts, default: dat)
         Output formats. Multiple formats are separated by the comma (,).
