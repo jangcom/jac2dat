@@ -1,3 +1,18 @@
+2023-12-10 (v1.06)
+- The headings of .csv and .xlsx output files are now written to a single line
+  by default, and can be divided into name headings and unit (sub)headings
+  via a command-line argument.
+- The starting cell of an .xlsx output file can now be designated
+  via a command-line argument.
+
+2023-12-06 (v1.05)
+- The default encoding of a .jac/.jca file has been changed to
+  cp932 (Shift JIS).
+- The fourth noncount record of a .jac/.jca file, or a comment in its
+  corresponding binary file, can now be parsed correctly and is mirrored
+  on the resulting output .dat file.
+- The y/n selection prompt can now be toggled off via a command-line argument.
+
 2020-07-18 (v1.04)
 - The directory structure has been reorganized.
 - .jac/.jca files can now be designated with their relative or absolute paths
