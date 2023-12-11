@@ -6,6 +6,8 @@ SYNOPSIS
                         [--det=det_file] [--out_encoding]
                         [--out_fmts=ext ...] [--out_path=path]
                         [--out_prepend=flag] [--out_append=flag]
+                        [--out_xl_first_row=int] [--out_xl_first_col=int]
+                        [--out_xl_freeze_panes=cell]
                         [--noyn] [--nofm] [--nopause]
 
 DESCRIPTION
@@ -79,6 +81,15 @@ OPTIONS
 
         --out_append=flag (short: --app, default: empty)
             A flag to be appended to the names of output files.
+
+        --out_xl_first_row=int (default: 0)
+            The first row index (0-based) of an Excel output file.
+
+        --out_xl_first_col=int (default: 0)
+            The first column index (0-based) of an Excel output file.
+
+        --out_xl_freeze_panes=cell (default: B2)
+            The cell at which the panes will be frozen in an Excel output file.
 
         --noyn
             Run the program without prompting a y/n selection message.
