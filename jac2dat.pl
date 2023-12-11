@@ -1263,6 +1263,12 @@ sub parse_argv {
             $run_opts_href->{out_xl_first_col} = $_;
         }
 
+        # The cell at which the panes will be frozen in an Excel output file.
+        if (/$cmd_opts{out_xl_freeze_panes}/i) {
+            s/$cmd_opts{out_xl_freeze_panes}//i;
+            $run_opts_href->{out_xl_freeze_panes} = $_;
+        }
+
         # The program will run without prompting a y/n selection message.
         if (/$cmd_opts{noyn}/) {
             $run_opts_href->{is_noyn} = 1;
@@ -1730,7 +1736,8 @@ sub conv_jac_to_dat {
                 ],
                 data_arr_ref => $arr_ref_to_data,
                 ragged_left_idx_multiples => [1..7],
-                freeze_panes => 'C4', # Alt: {row => 3, col => 2}
+                # (legacy) Alt: {row => 3, col => 2}
+                freeze_panes => $run_opts_href->{out_xl_freeze_panes},
                 first_cell   => [
                     $run_opts_href->{out_xl_first_row},
                     $run_opts_href->{out_xl_first_col},
@@ -1765,36 +1772,38 @@ sub jac2dat {
             },
         );
         my %cmd_opts = (  # Command-line opts
-            jac_all          => qr/-?-a(?:ll)?/i,
-            inp_encoding     => qr/-?-inp_encoding\s*=\s*/i,
-            det              => qr/-?-det(?:ector)?\s*=\s*/i,
+            jac_all             => qr/-?-a(?:ll)?/i,
+            inp_encoding        => qr/-?-inp_encoding\s*=\s*/i,
+            det                 => qr/-?-det(?:ector)?\s*=\s*/i,
             # dat_: For backward compatibility
-            out_encoding     => qr/-?-(dat|out)_encoding\s*=\s*/i,
-            out_fmts         => qr/-?-(?:dat_|out_)?fmts?\s*=\s*/i,
-            out_path         => qr/-?-(?:dat_|out_)?path\s*=\s*/i,
-            out_prepend      => qr/-?-(?:dat_|out_)?prep(?:end)?\s*=\s*/i,
-            out_append       => qr/-?-(?:dat_|out_)?app(?:end)?\s*=\s*/i,
-            out_xl_first_row => qr/-?-(?:dat_|out_)?xl_first_row\s*=\s*/i,
-            out_xl_first_col => qr/-?-(?:dat_|out_)?xl_first_col\s*=\s*/i,
-            noyn             => qr/-?-noyn/,
-            nofm             => qr/-?-nofm/,
-            nopause          => qr/-?-nopause/i,
+            out_encoding        => qr/-?-(dat|out)_encoding\s*=\s*/i,
+            out_fmts            => qr/-?-(?:dat_|out_)?fmts?\s*=\s*/i,
+            out_path            => qr/-?-(?:dat_|out_)?path\s*=\s*/i,
+            out_prepend         => qr/-?-(?:dat_|out_)?prep(?:end)?\s*=\s*/i,
+            out_append          => qr/-?-(?:dat_|out_)?app(?:end)?\s*=\s*/i,
+            out_xl_first_row    => qr/-?-(?:dat_|out_)?xl_first_row\s*=\s*/i,
+            out_xl_first_col    => qr/-?-(?:dat_|out_)?xl_first_col\s*=\s*/i,
+            out_xl_freeze_panes => qr/-?-(?:dat_|out_)?freeze_panes\s*=\s*/i,
+            noyn                => qr/-?-noyn/,
+            nofm                => qr/-?-nofm/,
+            nopause             => qr/-?-nopause/i,
         );
         my %run_opts = (  # Program run opts
-            jac_files        => [],
-            inp_encoding     => 'cp932',
-            det              => '',
-            det_sep          => '=',
-            out_encoding     => 'UTF-8',
-            out_fmts         => ['dat'],
-            out_path         => '.',
-            out_prepend      => '',
-            out_append       => '',
-            out_xl_first_row => 0,
-            out_xl_first_col => 0,
-            is_noyn          => 0,
-            is_nofm          => 0,
-            is_nopause       => 0,
+            jac_files           => [],
+            inp_encoding        => 'cp932',
+            det                 => '',
+            det_sep             => '=',
+            out_encoding        => 'UTF-8',
+            out_fmts            => ['dat'],
+            out_path            => '.',
+            out_prepend         => '',
+            out_append          => '',
+            out_xl_first_row    => 0,
+            out_xl_first_col    => 0,
+            out_xl_freeze_panes => 'B2',
+            is_noyn             => 0,
+            is_nofm             => 0,
+            is_nopause          => 0,
         );
 
         # ARGV validation and parsing
@@ -1834,6 +1843,7 @@ jac2dat - Convert .jac/.jca files to various data formats
                     [--out_fmts=ext ...] [--out_path=path]
                     [--out_prepend=flag] [--out_append=flag]
                     [--out_xl_first_row=int] [--out_xl_first_col=int]
+                    [--out_xl_freeze_panes=cell]
                     [--noyn] [--nofm] [--nopause]
 
 =head1 DESCRIPTION
@@ -1915,6 +1925,9 @@ jac2dat - Convert .jac/.jca files to various data formats
 
     --out_xl_first_col=int (default: 0)
         The first column index (0-based) of an Excel output file.
+
+    --out_xl_freeze_panes=cell (default: B2)
+        The cell at which the panes will be frozen in an Excel output file.
 
     --noyn
         Run the program without prompting a y/n selection message.
