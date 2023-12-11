@@ -14,7 +14,7 @@ use constant ARRAY => ref [];
 use constant HASH  => ref {};
 
 
-our $VERSION = '1.05';
+our $VERSION = '1.06';
 our $LAST    = '2023-12-10';
 our $FIRST   = '2019-02-04';
 
@@ -519,9 +519,10 @@ sub reduce_data {
         # [XLSX]
         my($workbook, $worksheet, %xlsx_formats);
         my($xlsx_row, $xlsx_col, $xlsx_col_init, $xlsx_col_scale_factor);
-        $xlsx_row                  = $_cols{first_cell}[0];  # Starting row number
-        $xlsx_col = $xlsx_col_init = $_cols{first_cell}[1];  # Starting col number
-        $xlsx_col_scale_factor     = 1.2;  # Empirically determined
+        $xlsx_row                  = $_cols{first_cell}[0];  # Starting row num
+        $xlsx_col = $xlsx_col_init = $_cols{first_cell}[1];  # Starting col num
+        # Empirically determined
+        $xlsx_col_scale_factor     = $_cols{is_out_csv_xl_subheads} ? 1.2 : 1.8;
         if ($_flag =~ $_flags{xlsx}) {
             require Excel::Writer::XLSX;  # vendor lib || cpanm
             binmode($_fh);  # fh can now be R/W in binary as well as in text
@@ -788,16 +789,37 @@ sub reduce_data {
         }
 
         # [CSV][XLSX]
+        my @_heads_combined;
+        for (my $j=0; $j<=$#{$_cols{heads}}; $j++) {
+            my $_combined = sprintf(
+                "%s %s",
+                $_cols{heads}[$j],
+                $_cols{subheads}[$j],
+            );
+            push @_heads_combined, $_combined;
+        }
         if ($_flag =~ $_flags{csv}) {
             $csv->sep_char($_cols{heads_sep}{$_flag});
-            $csv->print($_fh, $_cols{heads});
-            $csv->print($_fh, $_cols{subheads});
+            $csv->print(
+                $_fh,
+                (
+                    $_cols{is_out_csv_xl_subheads} ?
+                        $_cols{heads} : \@_heads_combined
+                ),
+            );
+            $csv->print(
+                $_fh,
+                $_cols{subheads},
+            ) if $_cols{is_out_csv_xl_subheads};
         }
         if ($_flag =~ $_flags{xlsx}) {
             $worksheet->write_row(
                 $xlsx_row++,
                 $xlsx_col,
-                $_cols{heads},
+                (
+                    $_cols{is_out_csv_xl_subheads} ?
+                        $_cols{heads} : \@_heads_combined
+                ),
                 $xlsx_formats{top}{none}  # top rule formatted
             );
             $worksheet->write_row(
@@ -805,7 +827,7 @@ sub reduce_data {
                 $xlsx_col,
                 $_cols{subheads},
                 $xlsx_formats{none}{none}
-            );
+            ) if $_cols{is_out_csv_xl_subheads};
         }
 
         # [DAT][TeX] Middle rule
@@ -1267,6 +1289,12 @@ sub parse_argv {
         if (/$cmd_opts{out_xl_freeze_panes}/i) {
             s/$cmd_opts{out_xl_freeze_panes}//i;
             $run_opts_href->{out_xl_freeze_panes} = $_;
+        }
+
+        # Divide the data headings into name and unit components
+        # in .csv and .xlsx output files.
+        if (/$cmd_opts{out_csv_xl_subheads}/) {
+            $run_opts_href->{is_out_csv_xl_subheads} = 1;
         }
 
         # The program will run without prompting a y/n selection message.
@@ -1734,6 +1762,8 @@ sub conv_jac_to_dat {
                     "(gam)",
                     "(gam sec^{-1})",
                 ],
+                is_out_csv_xl_subheads =>
+                    $run_opts_href->{is_out_csv_xl_subheads},
                 data_arr_ref => $arr_ref_to_data,
                 ragged_left_idx_multiples => [1..7],
                 # (legacy) Alt: {row => 3, col => 2}
@@ -1784,26 +1814,28 @@ sub jac2dat {
             out_xl_first_row    => qr/-?-(?:dat_|out_)?xl_first_row\s*=\s*/i,
             out_xl_first_col    => qr/-?-(?:dat_|out_)?xl_first_col\s*=\s*/i,
             out_xl_freeze_panes => qr/-?-(?:dat_|out_)?freeze_panes\s*=\s*/i,
-            noyn                => qr/-?-noyn/,
-            nofm                => qr/-?-nofm/,
+            out_csv_xl_subheads => qr/-?-(?:dat_|out_)?xl_subheads/i,
+            noyn                => qr/-?-noyn/i,
+            nofm                => qr/-?-nofm/i,
             nopause             => qr/-?-nopause/i,
         );
         my %run_opts = (  # Program run opts
-            jac_files           => [],
-            inp_encoding        => 'cp932',
-            det                 => '',
-            det_sep             => '=',
-            out_encoding        => 'UTF-8',
-            out_fmts            => ['dat'],
-            out_path            => '.',
-            out_prepend         => '',
-            out_append          => '',
-            out_xl_first_row    => 0,
-            out_xl_first_col    => 0,
-            out_xl_freeze_panes => 'B2',
-            is_noyn             => 0,
-            is_nofm             => 0,
-            is_nopause          => 0,
+            jac_files              => [],
+            inp_encoding           => 'cp932',
+            det                    => '',
+            det_sep                => '=',
+            out_encoding           => 'UTF-8',
+            out_fmts               => ['dat'],
+            out_path               => '.',
+            out_prepend            => '',
+            out_append             => '',
+            out_xl_first_row       => 0,
+            out_xl_first_col       => 0,
+            out_xl_freeze_panes    => 'B2',
+            is_out_csv_xl_subheads => 0,
+            is_noyn                => 0,
+            is_nofm                => 0,
+            is_nopause             => 0,
         );
 
         # ARGV validation and parsing
@@ -1843,7 +1875,7 @@ jac2dat - Convert .jac/.jca files to various data formats
                     [--out_fmts=ext ...] [--out_path=path]
                     [--out_prepend=flag] [--out_append=flag]
                     [--out_xl_first_row=int] [--out_xl_first_col=int]
-                    [--out_xl_freeze_panes=cell]
+                    [--out_xl_freeze_panes=cell] [--out_csv_xl_subheads]
                     [--noyn] [--nofm] [--nopause]
 
 =head1 DESCRIPTION
@@ -1928,6 +1960,10 @@ jac2dat - Convert .jac/.jca files to various data formats
 
     --out_xl_freeze_panes=cell (default: B2)
         The cell at which the panes will be frozen in an Excel output file.
+
+    --out_csv_xl_subheads
+        Divide the data headings into name and unit components
+        in .csv and .xlsx output files.
 
     --noyn
         Run the program without prompting a y/n selection message.

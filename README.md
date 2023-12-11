@@ -36,7 +36,7 @@
                     [--out_fmts=ext ...] [--out_path=path]
                     [--out_prepend=flag] [--out_append=flag]
                     [--out_xl_first_row=int] [--out_xl_first_col=int]
-                    [--out_xl_freeze_panes=cell]
+                    [--out_xl_freeze_panes=cell] [--out_csv_xl_subheads]
                     [--noyn] [--nofm] [--nopause]</code></pre>
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
@@ -121,6 +121,10 @@
 
     --out_xl_freeze_panes=cell (default: B2)
         The cell at which the panes will be frozen in an Excel output file.
+
+    --out_csv_xl_subheads
+        Divide the data headings into name and unit components
+        in .csv and .xlsx output files.
 
     --noyn
         Run the program without prompting a y/n selection message.
