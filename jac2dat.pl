@@ -14,8 +14,8 @@ use constant ARRAY => ref [];
 use constant HASH  => ref {};
 
 
-our $VERSION = '1.06';
-our $LAST    = '2023-12-10';
+our $VERSION = '1.07';
+our $LAST    = '2026-02-13';
 our $FIRST   = '2019-02-04';
 
 
@@ -1217,17 +1217,20 @@ sub parse_argv {
     # Parser: Overwrite default run options if requested by the user.
     my $field_sep = ',';
     foreach (@$argv_aref) {
-        # Input .jac/.jca files
-        if (/[.]j[ac]/i) {
+        # Input .jac/.jca/.tka files
+        if (/\.(?:jac|jca|tka)\z/i) {
             push @{$run_opts_href->{jac_files}}, $_;
         }
 
-        # Read in all .jac/.jca files in the current working directory.
+        # Read in all .jac/.jca/.tka files in the current working directory.
         if (/$cmd_opts{jac_all}/) {
-            push @{$run_opts_href->{jac_files}}, glob '*.jac *.jca';
+            opendir(my $dh, ".") or die "Cannot open current directory: $!";
+            my @jac = grep { -f $_ && /\.(?:jac|jca|tka)\z/i } readdir($dh);
+            closedir($dh);
+            push @{$run_opts_href->{jac_files}}, @jac;
         }
 
-        # The encoding of input .jac/.jca files
+        # The encoding of input .jac/.jca/.tka files
         if (/$cmd_opts{inp_encoding}/i) {
             s/$cmd_opts{inp_encoding}//i;
             $run_opts_href->{inp_encoding} = $_;
@@ -1406,7 +1409,7 @@ sub calc_nrg_fwhm_eff_using {
 
 
 sub conv_jac_to_dat {
-    # """ Convert .jac/.jca files to various output formats. """
+    # """ Convert .jac/.jca/.tka files to more readable formats. """
 
     my(
         $prog_info_href,
@@ -1459,7 +1462,7 @@ sub conv_jac_to_dat {
 
     # Notification
     if (not $run_opts_href->{jac_files}[0]) {
-        print "No .jac/.jca file found.\n\n";
+        print "No .jac/.jca/.tka file found.\n\n";
         return;
     }
     printf(
@@ -1495,7 +1498,7 @@ sub conv_jac_to_dat {
     foreach my $jac (@{$run_opts_href->{jac_files}}) {
         my(@counts, @gammas);
 
-        # Read in the content of a .jac/.jca file.
+        # Read in the content of a .jac/.jca/.tka file.
         # Use chomp() to remove newlines before storing the lines
         # to the counts array.
         my $jac_fh_mode = sprintf(
@@ -1514,8 +1517,8 @@ sub conv_jac_to_dat {
         }
         close $jac_fh;
 
-        # Inspect the number of records in the .jac/.jca file and warn
-        # if it is not an integer multiple of 4096.
+        # Inspect the number of records in the .jac/.jca/.tka file and
+        # warn if it is not an integer multiple of 4096.
         my $counts_size = @counts;
         print(
             "!!! Warning !!!\n".
@@ -1732,10 +1735,10 @@ sub conv_jac_to_dat {
                     ),
                     "-" x 69,
                     #
-                    # Comment 4: A comment, if any, in the .jac/.jca file
+                    # Comment 4: A comment, if any, in the .jac/.jca/.tka file
                     #
                     "-" x 69,
-                    " Comment embedded in .jac/.jca",
+                    " Comment embedded in .jac/.jca/.tka",
                     "-" x 69,
                     $cmt_in_jac eq ""? " (blank)": " $cmt_in_jac",
                     "-" x 69,
@@ -1791,7 +1794,8 @@ sub jac2dat {
     if (@ARGV) {
         my %prog_info = (
             titl       => basename($0, '.pl'),
-            expl       => "Convert .jac/.jca files to various data formats",
+            expl       => "Convert .jac/.jca/.tka files to".
+                          " more readable formats",
             vers       => $VERSION,
             date_last  => $LAST,
             date_first => $FIRST,
@@ -1867,7 +1871,7 @@ __END__
 
 =head1 NAME
 
-jac2dat - Convert .jac/.jca files to various data formats
+jac2dat - Convert .jac/.jca/.tka files to more readable formats
 
 =head1 SYNOPSIS
 
@@ -1881,11 +1885,11 @@ jac2dat - Convert .jac/.jca files to various data formats
 
 =head1 DESCRIPTION
 
-    jac2dat converts .jac/.jca files to various data formats.
+    jac2dat converts .jac/.jca/.tka files to various data formats.
     - JAC file: The gamma spectra format of MEXT (previously the Science and
                 Technology Agency), Japan. For details, refer to the catalogue
                 of DS-P1001 Gamma Station, SII.
-                A .jac/.jca file consists of only one column, in which
+                A .jac/.jca/.tka file consists of only one column, in which
                 gamma counts are stored in ascending order of channels.
                 The first four records are "not" gamma counts, and
                 are used for special purposes:
@@ -1893,7 +1897,7 @@ jac2dat - Convert .jac/.jca files to various data formats
                 - Record 2: Real time (duration)
                 - Record 3: Acquired time
                 - Record 4: Comment
-    - DAT file: A plain text file converted from a .jac/.jca file.
+    - DAT file: A plain text file converted from a .jac/.jca/.tka file.
                 A .dat file consists of multiple columns, in which
                 channels, gamma energies, peak FWHMs, peak efficiencies,
                 counts, count per second (cps), gammas, and
@@ -1903,16 +1907,17 @@ jac2dat - Convert .jac/.jca files to various data formats
 =head1 OPTIONS
 
     jac_files ...
-        .jac/.jca files to be converted.
+        .jac/.jca/.tka files to be converted.
 
     --all (short: -a)
-        All .jac/.jca files in the current working directory will be converted.
+        All .jac/.jca/.tka files in the current working directory
+        will be converted.
 
     --inp_encoding (default: cp932)
-        Specify the encoding of .jac/.jca files to be converted.
+        Specify the encoding of .jac/.jca/.tka files to be converted.
         Use one of the supported encodings listed in the following URL.
         https://perldoc.perl.org/Encode::Supported#Supported-Encodings
-        Use cp932 for .jac/.jca files encoded in Shift JIS.
+        Use cp932 for .jac/.jca/.tka files encoded in Shift JIS.
 
     --detector=det_file (short: --det)
         A file containing conversion functions of a detector
@@ -1996,7 +2001,7 @@ Jaewoong Jang <jangj@korea.ac.kr>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2019-2023 Jaewoong Jang
+Copyright (c) 2019-2026 Jaewoong Jang
 
 =head1 LICENSE
 
