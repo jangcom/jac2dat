@@ -1508,7 +1508,8 @@ sub conv_jac_to_dat {
         # Parentheses missing around "my" list at ...
         open my $jac_fh, $jac_fh_mode, $jac or die "$0: open $jac: $!";
         foreach (<$jac_fh>) {
-            chomp($_);
+            chomp;
+            s/\r\z//;
             push @counts, $_;
         }
         close $jac_fh;
