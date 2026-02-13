@@ -4,8 +4,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+<title>jac2dat - Convert .jac/.jca/.tka files to more readable formats</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<link rev="made" href="mailto:" />
+<link rev="made" href="mailto:root@tahoe-arm64.local" />
 </head>
 
 <body>
@@ -27,124 +28,125 @@
 
 <h1 id="NAME">NAME</h1>
 
-<p>jac2dat - Convert .jac/.jca files to various data formats</p>
+<p>jac2dat - Convert .jac/.jca/.tka files to more readable formats</p>
 
 <h1 id="SYNOPSIS">SYNOPSIS</h1>
 
-<pre><code>    perl jac2dat.pl [jac_files ...] [--all] [--inp_encoding]
-                    [--det=det_file] [--out_encoding]
-                    [--out_fmts=ext ...] [--out_path=path]
-                    [--out_prepend=flag] [--out_append=flag]
-                    [--out_xl_first_row=int] [--out_xl_first_col=int]
-                    [--out_xl_freeze_panes=cell] [--out_csv_xl_subheads]
-                    [--noyn] [--nofm] [--nopause]</code></pre>
+<pre><code>perl jac2dat.pl [jac_files ...] [--all] [--inp_encoding]
+                [--det=det_file] [--out_encoding]
+                [--out_fmts=ext ...] [--out_path=path]
+                [--out_prepend=flag] [--out_append=flag]
+                [--out_xl_first_row=int] [--out_xl_first_col=int]
+                [--out_xl_freeze_panes=cell] [--out_csv_xl_subheads]
+                [--noyn] [--nofm] [--nopause]</code></pre>
 
 <h1 id="DESCRIPTION">DESCRIPTION</h1>
 
-<pre><code>    jac2dat converts .jac/.jca files to various data formats.
-    - JAC file: The gamma spectra format of MEXT (previously the Science and
-                Technology Agency), Japan. For details, refer to the catalogue
-                of DS-P1001 Gamma Station, SII.
-                A .jac/.jca file consists of only one column, in which
-                gamma counts are stored in ascending order of channels.
-                The first four records are &quot;not&quot; gamma counts, and
-                are used for special purposes:
-                - Record 1: Live time (duration)
-                - Record 2: Real time (duration)
-                - Record 3: Acquired time
-                - Record 4: Comment
-    - DAT file: A plain text file converted from a .jac/.jca file.
-                A .dat file consists of multiple columns, in which
-                channels, gamma energies, peak FWHMs, peak efficiencies,
-                counts, count per second (cps), gammas, and
-                gamma per second (gps) are stored.
-    - Other supported data formats include tex, csv, xlsx, json, and yaml.</code></pre>
+<pre><code>jac2dat converts .jac/.jca/.tka files to various data formats.
+- JAC file: The gamma spectra format of MEXT (previously the Science and
+            Technology Agency), Japan. For details, refer to the catalogue
+            of DS-P1001 Gamma Station, SII.
+            A .jac/.jca/.tka file consists of only one column, in which
+            gamma counts are stored in ascending order of channels.
+            The first four records are &quot;not&quot; gamma counts, and
+            are used for special purposes:
+            - Record 1: Live time (duration)
+            - Record 2: Real time (duration)
+            - Record 3: Acquired time
+            - Record 4: Comment
+- DAT file: A plain text file converted from a .jac/.jca/.tka file.
+            A .dat file consists of multiple columns, in which
+            channels, gamma energies, peak FWHMs, peak efficiencies,
+            counts, count per second (cps), gammas, and
+            gamma per second (gps) are stored.
+- Other supported data formats include tex, csv, xlsx, json, and yaml.</code></pre>
 
 <h1 id="OPTIONS">OPTIONS</h1>
 
-<pre><code>    jac_files ...
-        .jac/.jca files to be converted.
+<pre><code>jac_files ...
+    .jac/.jca/.tka files to be converted.
 
-    --all (short: -a)
-        All .jac/.jca files in the current working directory will be converted.
+--all (short: -a)
+    All .jac/.jca/.tka files in the current working directory
+    will be converted.
 
-    --inp_encoding (default: cp932)
-        Specify the encoding of .jac/.jca files to be converted.
-        Use one of the supported encodings listed in the following URL.
-        https://perldoc.perl.org/Encode::Supported#Supported-Encodings
-        Use cp932 for .jac/.jca files encoded in Shift JIS.
+--inp_encoding (default: cp932)
+    Specify the encoding of .jac/.jca/.tka files to be converted.
+    Use one of the supported encodings listed in the following URL.
+    https://perldoc.perl.org/Encode::Supported#Supported-Encodings
+    Use cp932 for .jac/.jca/.tka files encoded in Shift JIS.
 
-    --detector=det_file (short: --det)
-        A file containing conversion functions of a detector
-        such as channel-to-energy and channel-to-FWHM functions.
-        Key-value pairs contained in this file take precedence
-        over the predefined functions.
-        Refer to the sample file &#39;detector.j2d&#39; for the syntax.
+--detector=det_file (short: --det)
+    A file containing conversion functions of a detector
+    such as channel-to-energy and channel-to-FWHM functions.
+    Key-value pairs contained in this file take precedence
+    over the predefined functions.
+    Refer to the sample file &#39;detector.j2d&#39; for the syntax.
 
-    --out_encoding (default: UTF-8)
-        Specify the encoding of converted files.
-        Use one of the supported encodings listed in the following URL.
-        https://perldoc.perl.org/Encode::Supported#Supported-Encodings
-        Use UTF-8 unless you specifically need a different encoding.
+--out_encoding (default: UTF-8)
+    Specify the encoding of converted files.
+    Use one of the supported encodings listed in the following URL.
+    https://perldoc.perl.org/Encode::Supported#Supported-Encodings
+    Use UTF-8 unless you specifically need a different encoding.
 
-    --out_fmts=ext ... (short: --fmts, default: dat)
-        Output formats. Multiple formats are separated by the comma (,).
-        all
-            All of the following ext&#39;s.
-        dat
-            Plain text
-        tex
-            LaTeX tabular environment
-        csv
-            comma-separated value
-        xlsx
-            Microsoft Excel 2007
-        json
-            JavaScript Object Notation
-        yaml
-            YAML
+--out_fmts=ext ... (short: --fmts, default: dat)
+    Output formats. Multiple formats are separated by the comma (,).
+    all
+        All of the following ext&#39;s.
+    dat
+        Plain text
+    tex
+        LaTeX tabular environment
+    csv
+        comma-separated value
+    xlsx
+        Microsoft Excel 2007
+    json
+        JavaScript Object Notation
+    yaml
+        YAML
 
-    --out_path=path (short: --path, default: current working directory)
-        The output path.
+--out_path=path (short: --path, default: current working directory)
+    The output path.
 
-    --out_prepend=flag (short: --prep, default: empty)
-        A flag to be prepended to the names of output files.
+--out_prepend=flag (short: --prep, default: empty)
+    A flag to be prepended to the names of output files.
 
-    --out_append=flag (short: --app, default: empty)
-        A flag to be appended to the names of output files.
+--out_append=flag (short: --app, default: empty)
+    A flag to be appended to the names of output files.
 
-    --out_xl_first_row=int (default: 0)
-        The first row index (0-based) of an Excel output file.
+--out_xl_first_row=int (default: 0)
+    The first row index (0-based) of an Excel output file.
 
-    --out_xl_first_col=int (default: 0)
-        The first column index (0-based) of an Excel output file.
+--out_xl_first_col=int (default: 0)
+    The first column index (0-based) of an Excel output file.
 
-    --out_xl_freeze_panes=cell (default: B2)
-        The cell at which the panes will be frozen in an Excel output file.
+--out_xl_freeze_panes=cell (default: B2)
+    The cell at which the panes will be frozen in an Excel output file.
 
-    --out_csv_xl_subheads
-        Divide the data headings into name and unit components
-        in .csv and .xlsx output files.
+--out_csv_xl_subheads
+    Divide the data headings into name and unit components
+    in .csv and .xlsx output files.
 
-    --noyn
-        Run the program without prompting a y/n selection message.
+--noyn
+    Run the program without prompting a y/n selection message.
 
-    --nofm
-        Do not show the front matter at the beginning of the program.
+--nofm
+    Do not show the front matter at the beginning of the program.
 
-    --nopause
-        Do not pause the shell at the end of the program.</code></pre>
+--nopause
+    Do not pause the shell at the end of the program.</code></pre>
 
 <h1 id="EXAMPLES">EXAMPLES</h1>
 
-<pre><code>    perl jac2dat.pl lt1200s.jac --fmts=dat,xlsx
-    perl jac2dat.pl ./samples/sample_rand.jac --det=./j2d/det_fitted.j2d
-    perl jac2dat.pl ./samples/sample_rand.jac --nopause</code></pre>
+<pre><code>perl jac2dat.pl lt1200s.jac --fmts=dat,xlsx
+perl jac2dat.pl ./samples/sample_rand.jac --det=./j2d/det_fitted.j2d
+perl jac2dat.pl ./samples/sample_rand.jac --nopause</code></pre>
 
 <h1 id="REQUIREMENTS">REQUIREMENTS</h1>
 
-<pre><code>    Perl 5
-        Text::CSV, Excel::Writer::XLSX, JSON, YAML</code></pre>
+<pre><code>Perl 5
+    Text::CSV, Excel::Writer::XLSX, JSON, YAML</code></pre>
 
 <h1 id="SEE-ALSO">SEE ALSO</h1>
 
@@ -156,7 +158,7 @@
 
 <h1 id="COPYRIGHT">COPYRIGHT</h1>
 
-<p>Copyright (c) 2019-2023 Jaewoong Jang</p>
+<p>Copyright (c) 2019-2026 Jaewoong Jang</p>
 
 <h1 id="LICENSE">LICENSE</h1>
 

@@ -1,5 +1,5 @@
 NAME
-    jac2dat - Convert .jac/.jca files to various data formats
+    jac2dat - Convert .jac/.jca/.tka files to more readable formats
 
 SYNOPSIS
         perl jac2dat.pl [jac_files ...] [--all] [--inp_encoding]
@@ -11,11 +11,11 @@ SYNOPSIS
                         [--noyn] [--nofm] [--nopause]
 
 DESCRIPTION
-        jac2dat converts .jac/.jca files to various data formats.
+        jac2dat converts .jac/.jca/.tka files to various data formats.
         - JAC file: The gamma spectra format of MEXT (previously the Science and
                     Technology Agency), Japan. For details, refer to the catalogue
                     of DS-P1001 Gamma Station, SII.
-                    A .jac/.jca file consists of only one column, in which
+                    A .jac/.jca/.tka file consists of only one column, in which
                     gamma counts are stored in ascending order of channels.
                     The first four records are "not" gamma counts, and
                     are used for special purposes:
@@ -23,7 +23,7 @@ DESCRIPTION
                     - Record 2: Real time (duration)
                     - Record 3: Acquired time
                     - Record 4: Comment
-        - DAT file: A plain text file converted from a .jac/.jca file.
+        - DAT file: A plain text file converted from a .jac/.jca/.tka file.
                     A .dat file consists of multiple columns, in which
                     channels, gamma energies, peak FWHMs, peak efficiencies,
                     counts, count per second (cps), gammas, and
@@ -32,16 +32,17 @@ DESCRIPTION
 
 OPTIONS
         jac_files ...
-            .jac/.jca files to be converted.
+            .jac/.jca/.tka files to be converted.
 
         --all (short: -a)
-            All .jac/.jca files in the current working directory will be converted.
+            All .jac/.jca/.tka files in the current working directory
+            will be converted.
 
         --inp_encoding (default: cp932)
-            Specify the encoding of .jac/.jca files to be converted.
+            Specify the encoding of .jac/.jca/.tka files to be converted.
             Use one of the supported encodings listed in the following URL.
             https://perldoc.perl.org/Encode::Supported#Supported-Encodings
-            Use cp932 for .jac/.jca files encoded in Shift JIS.
+            Use cp932 for .jac/.jca/.tka files encoded in Shift JIS.
 
         --detector=det_file (short: --det)
             A file containing conversion functions of a detector
@@ -120,7 +121,7 @@ AUTHOR
     Jaewoong Jang <jangj@korea.ac.kr>
 
 COPYRIGHT
-    Copyright (c) 2019-2023 Jaewoong Jang
+    Copyright (c) 2019-2026 Jaewoong Jang
 
 LICENSE
     This software is available under the MIT license; the license

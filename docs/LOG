@@ -1,3 +1,11 @@
+2026-02-13 (v1.07)
+- The positional argument for input files now recognizes .tka
+  in addition to .jac and .jca.
+- The optional --all argument now also recognizes .tka
+  in addition to .jac and .jca. All extensions are handled case-insensitively.
+- The program removes residual \r characters that may result from CRLF line
+  endings on macOS or Linux.
+
 2023-12-10 (v1.06)
 - The headings of .csv and .xlsx output files are now written to a single line
   by default, and can be divided into name headings and unit (sub)headings
