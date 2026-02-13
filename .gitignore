@@ -12,3 +12,4 @@ docs/updates.txt
 refs/
 utils/
 *.lnk
+.DS_Store
